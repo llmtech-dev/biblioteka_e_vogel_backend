@@ -24,25 +24,6 @@ class BookAdmin(admin.ModelAdmin):
     inlines = [BookPageInline]
     readonly_fields = ['created_at', 'updated_at']
 
-
-@admin.register(BookPage)
-class BookPageAdmin(admin.ModelAdmin):
-    list_display = ['book', 'page_number']
-    list_filter = ['book']
-    inlines = [PageElementInline]
-
-
-
-
-
-@admin.register(Book)
-class BookAdmin(admin.ModelAdmin):
-    list_display = ['title', 'author', 'category', 'is_active', 'created_at']
-    list_filter = ['category', 'is_active', 'created_at']
-    search_fields = ['title', 'author']
-    inlines = [BookPageInline]
-    readonly_fields = ['created_at', 'updated_at']
-
     actions = ['send_notification_action']
 
     def send_notification_action(self, request, queryset):
@@ -92,3 +73,10 @@ class BookAdmin(admin.ModelAdmin):
                     book=obj,
                     image_url=obj.cover_image,
                 )
+
+
+@admin.register(BookPage)
+class BookPageAdmin(admin.ModelAdmin):
+    list_display = ['book', 'page_number']
+    list_filter = ['book']
+    inlines = [PageElementInline]
