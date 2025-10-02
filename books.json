@@ -1,0 +1,416 @@
+[
+    {
+        "id": "1",
+        "title": "Jeta e Ebu Bekrit",
+        "author": "Autor i Panjohur",
+        "translator": "Pa përkthyes",
+        "category": "jetaESahabeve",
+        "coverImage": "assets/images/covers/page1.png",
+        "pdfPath": "assets/pdfs/ebu_beker_sidik.pdf",
+        "pages": [
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Ebu Bekri ishte shoku më i afërt i Profetit Muhamed.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page2.png",
+                        "position": 1
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Ai ishte gjithmonë pranë tij në çdo sfidë.",
+                        "position": 0
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "2",
+        "title": "Histori e Musait",
+        "author": "I panjohur",
+        "translator": "",
+        "category": "historiteEProfeteve",
+        "coverImage": "assets/images/covers/page3.png",
+        "pdfPath": "assets/pdfs/libri1.pdf",
+        "pages": [
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Musai ishte një nga profetët më të rëndësishëm në histori.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page4.png",
+                        "position": 1
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Ai e udhëhoqi popullin e tij drejt lirisë.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page5.png",
+                        "position": 1
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "3",
+        "title": "Jeta e Aliut",
+        "author": "Autor i Panjohur",
+        "translator": "Pa përkthyes",
+        "category": "jetaESahabeve",
+        "coverImage": "assets/images/covers/page4.png",
+        "pdfPath": "assets/pdfs/libri1.pdf",
+        "pages": [
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Aliu ishte shoku më i afërt i Profetit Muhamed.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page2.png",
+                        "position": 1
+                    },
+                    {
+                        "type": "text",
+                        "content": "Aliu ishte shoku më i afërt i Profetit Muhamed.",
+                        "position": 2
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page2.png",
+                        "position": 3
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Ai ishte gjithmonë pranë tij në çdo sfidë.",
+                        "position": 0
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Aliu ishte shoku më i afërt i Profetit Muhamed.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page2.png",
+                        "position": 1
+                    },
+                    {
+                        "type": "text",
+                        "content": "Aliu ishte shoku më i afërt i Profetit Muhamed.",
+                        "position": 2
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page2.png",
+                        "position": 3
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Aliu ishte shoku më i afërt i Profetit Muhamed.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page2.png",
+                        "position": 1
+                    },
+                    {
+                        "type": "text",
+                        "content": "Aliu ishte shoku më i afërt i Profetit Muhamed.",
+                        "position": 2
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page2.png",
+                        "position": 3
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Aliu ishte shoku më i afërt i Profetit Muhamed.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page2.png",
+                        "position": 1
+                    },
+                    {
+                        "type": "text",
+                        "content": "Aliu ishte shoku më i afërt i Profetit Muhamed.",
+                        "position": 2
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page2.png",
+                        "position": 3
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "4",
+        "title": "Jeta e Umerit",
+        "author": "Autor i Panjohur",
+        "translator": "Pa përkthyes",
+        "category": "jetaESahabeve",
+        "coverImage": "assets/images/covers/page6.png",
+        "pdfPath": "assets/pdfs/libri1.pdf",
+        "pages": [
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Umeri ishte shoku më i afërt i Profetit Muhamed.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page2.png",
+                        "position": 1
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Ai ishte gjithmonë pranë tij në çdo sfidë.",
+                        "position": 0
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "5",
+        "title": "Jeta e Salihut",
+        "author": "Autor i Panjohur",
+        "translator": "Pa përkthyes",
+        "category": "historiteEProfeteve",
+        "coverImage": "assets/images/covers/page5.png",
+        "pdfPath": "assets/pdfs/libri1.pdf",
+        "pages": [
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Salihu ishte Profeti.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page2.png",
+                        "position": 1
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Ai ishte profet i popullit te Themudit.",
+                        "position": 0
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "6",
+        "title": "Jeta e Nuhut",
+        "author": "Autor i Panjohur",
+        "translator": "Pa përkthyes",
+        "category": "historiteEProfeteve",
+        "coverImage": "assets/images/covers/page5.png",
+        "pdfPath": "assets/pdfs/libri1.pdf",
+        "pages": [
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Nuhu ishte nder Profetet e pare.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page4.png",
+                        "position": 1
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Ai ndertoi varken kur u permbyt vendi.",
+                        "position": 0
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "7",
+        "title": "Historia e Daudit alejhi selam",
+        "author": "I panjohur",
+        "translator": "Some author",
+        "category": "historiteEProfeteve",
+        "coverImage": "assets/images/covers/page3.png",
+        "pdfPath": "assets/pdfs/libri1.pdf",
+        "pages": [
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Daudit alejhi selam ishte pjesé e ushtaréve qé luftuan me Talutin\nqé ishte mbreti i zgjedhur nga Allahu Pér Beni Israilét, qé ta\nluftonin Xhalutin i cili ishte njé tiran i ashpér i kohés sé tyre.\nAllahu i Lartésuar ja mundésoi Daudit alejhi selam qé ta vrasé\nXhalutin dhe u bé i dashur tek Beni Israilét. Mö pas Daudi u\nzgjodh mbret i Beni Israiléve dhe ju bashkuan dy té mirat e\ndunjas dhe ahiretit, ju dha pushteti dhe pejgamberia.\nAllahu thoté Pér té: \"Ne ia forcuam mbretöriné dhe i dhamé mencuri e dijeni Pér té gjykuar.\" (Sad 20)",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page4.png",
+                        "position": 1
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Ai ishte i pari qé prodhoi mburojat u-upore té luftés qé ishin edhe\nté lehta për t'u mbajtur né trup edhe shumé té mira për mbrojtjen\ne trupit té ushtaréve nga goditjet e armiqve. Allahu e mésoi atë se\nsi ta përdorte hekurin dhe ta përpunonte atë. Allahu ja mundësoi\nqé hekuri té jetë i lehtë për përpunim për té, ati nuk i vyente zjarri\napo çekani për përpunimin e hekurit, Daudi alejhi selam i jepte\nformë atij me duart e tij.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page5.png",
+                        "position": 1
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Edhe pse Daudit alejhi selam iu kishte dhënë pushteti dhe pejgamberia, veçse ai nuk hante veç nga puna e ndershme që\nbënte nga duart e veta.\nKa qenë Daudi alejhi selam i bindur ndaj urdhrave\ntë Allahut të Lartësuar, i devotshëm, e adhuronte Allahun shumë,\njepte mund të madh në punë të mira, ai falej natën, agjëronte një\nditë dhe hante ditën tjetër.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page4.png",
+                        "position": 1
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Allahu i Lartësuar atij i dhuroi një zë shumë të bukur, mirësi të\ncilën nuk ia kishte dhënë askujt tjetër. Kur Daudi alejhi selam e\nlexonte Zeburin (librin të cilin Allahu ja pat zbritur), nga zëri i tij\ni bukur edhe zogjët i mahnitke që e rrethonin dhe e madhëronin\nAllahun kur ai e madhëronte. Allahu ia nënshtrroi shpendët dhe\nmalet, të cilat e madhëronin Allahun bashkë me të.\nAllahu thotë:\n\"Ne i nënshtruam malet dhe shpendët që, bashkë me\nDavudin, të thurnin lavde (për Allahun).\" (Enbija 79)",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page4.png",
+                        "position": 1
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Thuhet se një ditë prej ditëve erdhën dy burra që të gjykoheshin\ntek Daudi alejhi selam. Njëri e akuzonte tjetrin se i kishte marrë\nclicka me dhunë, por tjetri e mohonte këtë gjë.\nDaudi alejhi selam i ktheu dhe u tha të presin për gjykimin e tyre.\nAllahu i shpalli që të vritet ai që po akuzon.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page4.png",
+                        "position": 1
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Të nesërmen Daudi i tha atij që po akuzonte:\nMu është shpallur se duhet që të vrasë. Unë do të vras patjetër,\npor më trego pse e akuzove padrejtësisht? Ai i tha:\n\"Pasha Allahu o Pejgamber i Allahut, ajo që kam thënë është e vërtet!\nPor unë e kam vrarë babanë e tij para një kohe.\"\nUrdhëroi Daudi alejhi selam që të vritet për krimin\nqë kishte bërë.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page4.png",
+                        "position": 1
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Një ditë derisa Daudi alejhi selam ishte në mihrab (vendfalje), dy\nveta hipën mbi murin e faltores së tij dhe hynë mbrenda. Ai u\nfrikësua prej tyre. Ata thanë: \"Mos u frikëso! Ne jemi dy\nkundërshtarë, një nga ti cilët i ka bërë padrejtësi tjetrit,\nprandaj gjyko me drejtësi dhe mos u shmang (prej së\nvërtetës), por na udhëzo në rrugë të drejtë\".\n(Njëri prej tyre tha:) \"Ky është vëllai im. Ai ka nëntëdhjetë e\nnëntë dele, kurse unë kam vetëm një dele, andaj më tha: \"Ma\njep mua atë!\" - dhe më mundi me fjalë.\nDavudi tha:\n\"Vërtet, ai ti ka bërë padrejtësi, të ka kërkuar delen tënde\ntë vetme, për ta bashkuar me delet e veta. Shumë\nbashkëpronës i bëjnë padrejtësi njëri-tjetrit, por megjithatë\nbesojnë dhe bëjnë punë të mira, por ata janë pak.\"",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page4.png",
+                        "position": 1
+                    }
+                ]
+            },
+            {
+                "elements": [
+                    {
+                        "type": "text",
+                        "content": "Kësaj radhe Daudi alejhi selam u ngut dhe dha gjykimin nga\nvetja e tij, duke thënë se tjetri ishte i padrejtë që kishte kërkuar\nnga ai delen e vetme. Këtë e bëri pa e pyetur tjetrin apo pa e vënë\nnë provë atë që akuzon.\nPor Daudi alejhi selam e kuptoi gabimin e tij. E pa se kjo ishte\nsprovë nga Allahu për të. Prandaj kërkoi falje nga Zoti i vet, ra në\ngjunjë dhe u përul, i kthyer me pendim të sinqertë tek Allahu.\nAllahu ia fali këtë, Daudi alejhi selam vërtet do ketë strehim\nshumë të mirë në jetën tjetër.",
+                        "position": 0
+                    },
+                    {
+                        "type": "image",
+                        "content": "assets/images/page4.png",
+                        "position": 1
+                    }
+                ]
+            }
+        ]
+    }
+]

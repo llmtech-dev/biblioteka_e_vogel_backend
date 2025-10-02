@@ -1,0 +1,137 @@
+[
+    {
+        "id": "1_quiz",
+        "bookId": "1",
+        "title": "Quiz - Jeta e Ebu Bekrit",
+        "questions": [
+            {
+                "id": "q1",
+                "text": "Kush ishte shoku më i afërt i Profetit Muhamed?",
+                "options": [
+                    {
+                        "text": "Ebu Bekri"
+                    },
+                    {
+                        "text": "Aliu"
+                    },
+                    {
+                        "text": "Umeri"
+                    },
+                    {
+                        "text": "Musai"
+                    }
+                ],
+                "correctOptionIndex": 0
+            },
+            {
+                "id": "q2",
+                "text": "Çfarë roli pati Ebu Bekri në jetën e Profetit?",
+                "options": [
+                    {
+                        "text": "Ishte profet"
+                    },
+                    {
+                        "text": "Ishte armik"
+                    },
+                    {
+                        "text": "Ishte shoku dhe ndihmësi i tij"
+                    },
+                    {
+                        "text": "Nuk kishte rol"
+                    }
+                ],
+                "correctOptionIndex": 2
+            }
+        ]
+    },
+    {
+        "id": "2_quiz",
+        "bookId": "2",
+        "title": "Quiz - Histori e Musait",
+        "questions": [
+            {
+                "id": "q1",
+                "text": "Kush ishte Musai?",
+                "options": [
+                    {
+                        "text": "Një sahabi"
+                    },
+                    {
+                        "text": "Një profet"
+                    },
+                    {
+                        "text": "Një mbret"
+                    },
+                    {
+                        "text": "Një historian"
+                    }
+                ],
+                "correctOptionIndex": 1
+            },
+            {
+                "id": "q2",
+                "text": "Çfarë bëri Musai për popullin e tij?",
+                "options": [
+                    {
+                        "text": "I udhëhoqi drejt lirisë"
+                    },
+                    {
+                        "text": "I la në robëri"
+                    },
+                    {
+                        "text": "I shpalli profetë të tjerë"
+                    },
+                    {
+                        "text": "U bë armiku i tyre"
+                    }
+                ],
+                "correctOptionIndex": 0
+            }
+        ]
+    },
+    {
+        "id": "6_quiz",
+        "bookId": "6",
+        "title": "Quiz - Jeta e Nuhut",
+        "questions": [
+            {
+                "id": "q1",
+                "text": "Kush ishte Nuhu?",
+                "options": [
+                    {
+                        "text": "Një nga profetët e parë"
+                    },
+                    {
+                        "text": "Një mbret i madh"
+                    },
+                    {
+                        "text": "Një sahabi"
+                    },
+                    {
+                        "text": "Një luftëtar"
+                    }
+                ],
+                "correctOptionIndex": 0
+            },
+            {
+                "id": "q2",
+                "text": "Çfarë ndërtoi Nuhu me urdhër të Allahut?",
+                "options": [
+                    {
+                        "text": "Një faltore"
+                    },
+                    {
+                        "text": "Një kështjellë"
+                    },
+                    {
+                        "text": "Një varkë"
+                    },
+                    {
+                        "text": "Një shkollë"
+                    }
+                ],
+                "correctOptionIndex": 2
+            }
+        ]
+    }
+]
