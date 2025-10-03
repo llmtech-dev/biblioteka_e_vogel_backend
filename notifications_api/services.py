@@ -46,15 +46,27 @@ def send_book_notification(book):
 
 
 def send_quiz_notification(quiz):
-    """Dërgon notifikim për kuiz të ri"""
-    title = "🎯 Kuiz i ri!"
-    body = f"{quiz.title} për librin {quiz.book.title}"
+    """
+    Dërgon notification për kuiz të ri
+    """
+    question_count = quiz.questions.count()
 
     data = {
         'type': 'newQuiz',
         'quiz_id': str(quiz.id),
+        'quiz_title': quiz.title,
         'book_id': str(quiz.book.id),
-        'title': quiz.title,
+        'book_title': quiz.book.title,
+        'category': quiz.book.category,
+        'question_count': str(question_count),
     }
 
-    return send_notification_to_all(title, body, data)
+    # Shto cover image të librit nëse ekziston
+    if quiz.book.cover_image:
+        data['cover_image'] = quiz.book.cover_image
+
+    return send_notification_to_all(
+        title=f"🎯 Kuiz i ri: {quiz.title}",
+        body=f"Testo njohuritë për '{quiz.book.title}' - {question_count} pyetje",
+        data=data
+    )
