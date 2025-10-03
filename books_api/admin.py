@@ -2,7 +2,6 @@ from django.contrib import admin
 from django.contrib import messages
 from .models import Book, BookPage, PageElement
 from notifications_api.services import send_book_notification
-from notifications_api.models import Notification
 
 
 class PageElementInline(admin.TabularInline):
@@ -18,65 +17,62 @@ class BookPageInline(admin.TabularInline):
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ['title', 'author', 'category', 'is_active', 'created_at']
+    list_display = ['id', 'title', 'author', 'category', 'is_active', 'created_at']
     list_filter = ['category', 'is_active', 'created_at']
-    search_fields = ['title', 'author']
+    search_fields = ['title', 'author', 'translator']
+
     inlines = [BookPageInline]
-    readonly_fields = ['created_at', 'updated_at']
 
-    actions = ['send_notification_action']
+    fieldsets = (
+        ('Informacioni Bazë', {
+            'fields': ('id', 'title', 'author', 'translator', 'category')
+        }),
+        ('Media', {
+            'fields': ('cover_image', 'cover_file', 'pdf_path', 'pdf_file')
+        }),
+        ('Statusi', {
+            'fields': ('is_active', 'version')
+        })
+    )
 
-    def send_notification_action(self, request, queryset):
-        """Dërgon notifikim për librat e zgjedhur"""
-        success_count = 0
+    actions = ['send_notification_for_books']
 
-        for book in queryset:
-            # Dërgo notifikim me Firebase
-            success, response = send_book_notification(book)
-
-            if success:
-                # Ruaj në database për tracking
-                Notification.objects.create(
-                    title=f"Libër i ri: {book.title}",
-                    description=f"{book.title} nga {book.author} është gati për lexim!",
-                    type='newBook',
-                    book=book,
-                    image_url=book.cover_image,
-                )
-                success_count += 1
-            else:
-                messages.error(request, f"Gabim për '{book.title}': {response}")
-
-        if success_count > 0:
-            messages.success(
-                request,
-                f"✅ U dërguan {success_count} njoftime me sukses!"
-            )
-
-    send_notification_action.short_description = "📱 Dërgo njoftim tek përdoruesit"
-
-    # Override save për auto-notifikim (opsionale)
     def save_model(self, request, obj, form, change):
-        is_new = obj._state.adding
+        """Dërgo notification kur shtohet libër i ri"""
+        is_new = not change
         super().save_model(request, obj, form, change)
 
-        # Nëse është libër i ri dhe është aktiv
+        # Dërgo notification vetëm për libra të rinj dhe aktiv
         if is_new and obj.is_active:
-            success, response = send_book_notification(obj)
-            if success:
-                messages.success(request, "✅ Njoftimi u dërgua automatikisht!")
-                # Ruaj në database
-                Notification.objects.create(
-                    title=f"Libër i ri: {obj.title}",
-                    description=f"{obj.title} nga {obj.author} është gati për lexim!",
-                    type='newBook',
-                    book=obj,
-                    image_url=obj.cover_image,
+            try:
+                success, response = send_book_notification(obj)
+                if success:
+                    messages.success(
+                        request,
+                        f'✅ Njoftimi për librin u dërgua: {response}'
+                    )
+                else:
+                    messages.warning(
+                        request,
+                        f'⚠️ Libri u ruajt por njoftimi nuk u dërgua: {response}'
+                    )
+            except Exception as e:
+                messages.error(
+                    request,
+                    f'❌ Gabim në dërgimin e njoftimit: {str(e)}'
                 )
 
+    def send_notification_for_books(self, request, queryset):
+        """Dërgo notification për librat e zgjedhur"""
+        sent = 0
+        for book in queryset.filter(is_active=True):
+            try:
+                success, response = send_book_notification(book)
+                if success:
+                    sent += 1
+            except:
+                pass
 
-@admin.register(BookPage)
-class BookPageAdmin(admin.ModelAdmin):
-    list_display = ['book', 'page_number']
-    list_filter = ['book']
-    inlines = [PageElementInline]
+        messages.success(request, f'✅ U dërguan {sent} njoftime për libra')
+
+    send_notification_for_books.short_description = "Dërgo njoftim për librat e zgjedhur"
