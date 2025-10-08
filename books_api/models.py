@@ -2,6 +2,8 @@ from django.db import models
 from django.utils import timezone
 import uuid
 
+from notifications_api.services import send_book_notification
+
 
 class BookCategory(models.TextChoices):
     EDUKATE_ISLAME = 'edukateIslame', 'Edukate Islame'
@@ -43,6 +45,10 @@ class Book(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
     version = models.IntegerField(default=1)
+    send_push_now = models.BooleanField(
+        default=False,
+        help_text="Aktivizoje për të dërguar push menjëherë kur ruan"
+    )
 
     # Tracking i njoftimeve
     notification_sent = models.BooleanField(default=False, verbose_name='Njoftimi u dërgua')
@@ -63,6 +69,8 @@ class Book(models.Model):
 
     def save(self, *args, **kwargs):
         """Auto-populate cover_image nga cover_file nëse nuk është vendosur"""
+        send_now = self.send_push_now
+        self.send_push_now = False
         if self.cover_file and not self.cover_image:
             # Save për të marrë URL-në e file
             super().save(*args, **kwargs)
@@ -72,6 +80,10 @@ class Book(models.Model):
                 super().save(update_fields=['cover_image'])
         else:
             super().save(*args, **kwargs)
+        if send_now and self.is_active:
+            send_book_notification(self)
+
+
 
 
 class BookPage(models.Model):

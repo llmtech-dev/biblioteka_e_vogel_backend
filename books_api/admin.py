@@ -30,7 +30,7 @@ class BookPageInline(admin.TabularInline):
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
     list_display = [
-        'short_id',  # ✅ Ndryshuar për UUID
+        'short_id',
         'title',
         'author',
         'category',
@@ -77,6 +77,10 @@ class BookAdmin(admin.ModelAdmin):
                 'pdf_path',
             ),
             'description': 'Mund të ngarkosh file OSE të vendosësh URL. Nëse ngarkon file, URL-ja do gjenerohet automatikisht.'
+        }),
+        ('Push-notification', {
+            'fields': ('send_push_now',),
+            'description': 'Shënoje ⇧ nëse do që të dërgohet njoftim menjëherë',
         }),
         ('Statusi', {
             'fields': ('is_active', 'version')
