@@ -32,7 +32,9 @@ ALLOWED_HOSTS = ['192.168.243.154', 'localhost', '127.0.0.1', 'permamat.pythonan
 if not DEBUG:
     # Upload firebase-credentials.json manually në PythonAnywhere
     FIREBASE_CREDENTIALS_PATH = '/home/permamat/biblioteka_e_vogel_backend/firebase-credentials.json'
-
+    CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
+    CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
+    CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
 # Application definition
 
 INSTALLED_APPS = [
