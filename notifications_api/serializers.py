@@ -8,18 +8,19 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Notification
-        fields = ['id', 'title', 'description', 'type', 'createdAt',
-                  'bookId', 'quizId', 'imageUrl']
+        fields = [
+            'id', 'title', 'description', 'type', 'createdAt',
+            'bookId', 'quizId', 'imageUrl'
+        ]
 
     def to_representation(self, instance):
-        data = super().to_representation(instance)
         return {
             'id': str(instance.id),
             'title': instance.title,
             'description': instance.description,
             'type': instance.type,
             'createdAt': instance.created_at.isoformat(),
-            'isRead': False,  # Gjithmonë false pa authentication
+            'isRead': False,
             'bookId': instance.book_id if instance.book else None,
             'quizId': instance.quiz_id if instance.quiz else None,
             'imageUrl': instance.image_url or None

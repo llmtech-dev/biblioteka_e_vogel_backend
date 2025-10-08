@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 import uuid
 
 
@@ -20,16 +21,21 @@ class BookCategory(models.TextChoices):
 
 
 class Book(models.Model):
-    id = models.CharField(max_length=100, primary_key=True, default=uuid.uuid4)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
     translator = models.CharField(max_length=255, blank=True)
     category = models.CharField(max_length=50, choices=BookCategory.choices)
-    cover_image = models.URLField(max_length=500)
+
+    # Cover image - zgjedh njërën
+    cover_image = models.URLField(max_length=500, blank=True, null=True,
+                                  help_text='URL e jashtme (opsionale nëse ngarkon file)')
     pdf_path = models.URLField(max_length=500, blank=True, null=True)
 
-    # File uploads për imazhe dhe PDF
-    cover_file = models.ImageField(upload_to='covers/', blank=True, null=True)
+    # File uploads
+    cover_file = models.ImageField(upload_to='covers/', blank=True, null=True,
+                                   help_text='Ngarko imazh nga kompjuteri')
     pdf_file = models.FileField(upload_to='pdfs/', blank=True, null=True)
 
     # Metadata
@@ -38,11 +44,34 @@ class Book(models.Model):
     is_active = models.BooleanField(default=True)
     version = models.IntegerField(default=1)
 
+    # Tracking i njoftimeve
+    notification_sent = models.BooleanField(default=False, verbose_name='Njoftimi u dërgua')
+    notification_sent_at = models.DateTimeField(null=True, blank=True, verbose_name='Dërguar më')
+    notification_count = models.IntegerField(default=0, verbose_name='Nr. njoftimesh')
+
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
         return self.title
+
+    def get_cover_url(self):
+        """Kthen URL-në e cover - prioritet për file të ngarkuar"""
+        if self.cover_file:
+            return self.cover_file.url
+        return self.cover_image or ''
+
+    def save(self, *args, **kwargs):
+        """Auto-populate cover_image nga cover_file nëse nuk është vendosur"""
+        if self.cover_file and not self.cover_image:
+            # Save për të marrë URL-në e file
+            super().save(*args, **kwargs)
+            # Pas save-it, cover_file.url është i disponueshëm
+            if not self.cover_image:
+                self.cover_image = self.cover_file.url
+                super().save(update_fields=['cover_image'])
+        else:
+            super().save(*args, **kwargs)
 
 
 class BookPage(models.Model):
@@ -52,6 +81,9 @@ class BookPage(models.Model):
     class Meta:
         ordering = ['page_number']
         unique_together = ['book', 'page_number']
+
+    def __str__(self):
+        return f"{self.book.title} - Faqja {self.page_number}"
 
 
 class PageElement(models.Model):
@@ -64,9 +96,10 @@ class PageElement(models.Model):
     type = models.CharField(max_length=10, choices=ELEMENT_TYPES)
     content = models.TextField()
     position = models.IntegerField()
-
-    # Për ruajtjen e imazheve
     image_file = models.ImageField(upload_to='page_images/', blank=True, null=True)
 
     class Meta:
         ordering = ['position']
+
+    def __str__(self):
+        return f"{self.page.book.title} - Faqja {self.page.page_number} - {self.type}"

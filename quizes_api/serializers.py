@@ -8,13 +8,13 @@ class AnswerOptionSerializer(serializers.ModelSerializer):
         fields = ['text']
 
     def to_representation(self, instance):
-        # Kthe vetëm text-in si në JSON tuaj
         return {
             'text': instance.text
         }
 
 
 class QuestionSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)  # ✅ UUID
     options = AnswerOptionSerializer(many=True, read_only=True)
 
     class Meta:
@@ -23,7 +23,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return {
-            'id': instance.id,
+            'id': str(instance.id),  # ✅ Konverto në string
             'text': instance.text,
             'options': [opt['text'] for opt in self.fields['options'].to_representation(instance.options.all())],
             'correctOptionIndex': instance.correct_option_index
@@ -31,17 +31,21 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 
 class QuizSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)  # ✅ UUID
     questions = QuestionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Quiz
-        fields = ['id', 'book', 'title', 'questions']  # Përdor 'book' jo 'bookId'
+        fields = [
+            'id', 'book', 'title', 'questions',
+            'notification_sent', 'notification_sent_at', 'notification_count'
+        ]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         return {
-            'id': instance.id,
-            'bookId': instance.book_id,  # book_id jo book
+            'id': str(instance.id),  # ✅ Konverto në string
+            'bookId': str(instance.book_id),  # ✅ Book UUID në string
             'title': instance.title,
             'questions': data['questions']
         }
@@ -49,6 +53,7 @@ class QuizSerializer(serializers.ModelSerializer):
 
 class QuizCreateSerializer(serializers.ModelSerializer):
     """Për admin - krijimi i quiz"""
+    id = serializers.UUIDField(read_only=True)  # ✅ Read-only
 
     class Meta:
         model = Quiz

@@ -9,7 +9,7 @@ from .serializers import QuizSerializer
 class QuizViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
-    permission_classes = [AllowAny]  # Pa authentication
+    permission_classes = [AllowAny]
 
     @action(detail=False, methods=['get'])
     def by_book(self, request):
@@ -19,5 +19,7 @@ class QuizViewSet(viewsets.ReadOnlyModelViewSet):
             quizzes = Quiz.objects.filter(book_id=book_id)
             serializer = self.get_serializer(quizzes, many=True)
             return Response(serializer.data)
-        return Response({'error': 'book_id is required'},
-                        status=400)
+        return Response(
+            {'error': 'book_id is required'},
+            status=400
+        )

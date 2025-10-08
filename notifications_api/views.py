@@ -1,4 +1,3 @@
-# notifications_api/views.py
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -10,6 +9,7 @@ from .serializers import NotificationSerializer
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Notification.objects.filter(is_active=True)
     serializer_class = NotificationSerializer
+    permission_classes = [AllowAny]
 
     @action(detail=False, methods=['post'])
     def register_token(self, request):
@@ -17,9 +17,3 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         token = request.data.get('token')
         # Ruaj token në database nëse do përdorësh për target specifik
         return Response({'status': 'Token registered'})
-
-
-# class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
-#     queryset = Notification.objects.filter(is_active=True)
-#     serializer_class = NotificationSerializer
-#     permission_classes = [AllowAny]  # Pa authentication

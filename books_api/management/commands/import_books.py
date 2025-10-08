@@ -1,5 +1,6 @@
 import json
 import os
+import uuid
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from books_api.models import Book, BookPage, PageElement
@@ -49,6 +50,9 @@ class Command(BaseCommand):
         created_count = 0
         updated_count = 0
 
+        # Ruaj mapping për përdorim nga import_quizzes
+        book_id_mapping = {}
+
         for book_data in books_data:
             self.stdout.write(f"Processing book: {book_data['title']}")
 
@@ -56,9 +60,13 @@ class Command(BaseCommand):
             cover_image = book_data['coverImage'].replace('assets/', '/static/')
             pdf_path = book_data.get('pdfPath', '').replace('assets/', '/static/')
 
+            # ✅ Gjeneroj UUID deterministik bazuar në ID numerik
+            numeric_id = book_data['id']
+            book_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, f"book_{numeric_id}")
+
             # Krijo ose përditëso librin
             book, created = Book.objects.update_or_create(
-                id=book_data['id'],
+                id=book_uuid,  # ✅ Përdor UUID
                 defaults={
                     'title': book_data['title'],
                     'author': book_data['author'],
@@ -69,15 +77,18 @@ class Command(BaseCommand):
                 }
             )
 
+            # ✅ Ruaj mapping
+            book_id_mapping[str(numeric_id)] = str(book_uuid)
+
             if created:
                 created_count += 1
                 self.stdout.write(
-                    self.style.SUCCESS(f'✓ Created book: {book.title}')
+                    self.style.SUCCESS(f'✓ Created book: {book.title} (ID: {numeric_id} → {str(book_uuid)[:8]}...)')
                 )
             else:
                 updated_count += 1
                 self.stdout.write(
-                    self.style.WARNING(f'↻ Updated book: {book.title}')
+                    self.style.WARNING(f'↻ Updated book: {book.title} (ID: {numeric_id} → {str(book_uuid)[:8]}...)')
                 )
 
             # Fshi faqet ekzistuese dhe krijo të rejat
@@ -103,6 +114,15 @@ class Command(BaseCommand):
                         content=content,
                         position=element_data['position']
                     )
+
+        # ✅ Ruaj mapping në një file për përdorim nga import_quizzes
+        mapping_file = os.path.join(settings.BASE_DIR, 'book_id_mapping.json')
+        with open(mapping_file, 'w') as f:
+            json.dump(book_id_mapping, f, indent=2)
+
+        self.stdout.write(
+            self.style.SUCCESS(f'✓ Saved book ID mapping to {mapping_file}')
+        )
 
         # Summary
         self.stdout.write(
