@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-i$fq3+xs#vdl(e^synd-ca*(p_bgt@7@d1=g!%-5q%w)jflm56
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.243.154', 'localhost', '127.0.0.1', 'permamat.pythonanywhere.com']
+ALLOWED_HOSTS = ['192.168.243.154', 'localhost', '127.0.0.1', 'permamat.pythonanywhere.com', '192.168.56.1']
 # ALLOWED_HOSTS = ['*']
 
 if not DEBUG:
@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'cloudinary',
     'cloudinary_storage',
+'django.contrib.sites',
     # 'channels'
 
 ]
@@ -71,6 +72,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'be_blog.urls'
+SITE_ID = 1
 
 TEMPLATES = [
     {
@@ -165,12 +167,12 @@ REST_FRAMEWORK = {
 #perkohesisht
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://192.168.243.154:8000", "https://permamat.pythonanywhere.com"
+    "http://192.168.243.154:8000", "https://permamat.pythonanywhere.com", "http://192.168.56.1:8000"
 ]
 
 FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'firebase-credentials.json')
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
@@ -178,6 +180,27 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
 
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'books_api': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
 
 # Channels për WebSocket
 # ASGI_APPLICATION = 'project.asgi.application'

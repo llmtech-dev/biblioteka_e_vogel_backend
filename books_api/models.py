@@ -1,8 +1,6 @@
 from django.db import models
-from django.utils import timezone
 import uuid
 
-from notifications_api.services import send_book_notification
 
 
 class BookCategory(models.TextChoices):
@@ -40,15 +38,20 @@ class Book(models.Model):
                                    help_text='Ngarko imazh nga kompjuteri')
     pdf_file = models.FileField(upload_to='pdfs/', blank=True, null=True)
 
+    send_push_now = models.BooleanField(
+        default=False,
+        verbose_name='Dërgo njoftim',
+        help_text='✓ Shëno për të dërguar push notification kur ruhet libri'
+    )
+
+    cover_public_id = models.CharField(max_length=255, blank=True, null=True)
+    pdf_public_id = models.CharField(max_length=255, blank=True, null=True)
+
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
     version = models.IntegerField(default=1)
-    send_push_now = models.BooleanField(
-        default=False,
-        help_text="Aktivizoje për të dërguar push menjëherë kur ruan"
-    )
 
     # Tracking i njoftimeve
     notification_sent = models.BooleanField(default=False, verbose_name='Njoftimi u dërgua')
@@ -62,26 +65,51 @@ class Book(models.Model):
         return self.title
 
     def get_cover_url(self):
-        """Kthen URL-në e cover - prioritet për file të ngarkuar"""
+        """Kthen URL-në e cover - prioritet për Cloudinary URL"""
+        # Nëse ka Cloudinary URL (nga upload ose manual)
+        if self.cover_image:
+            return self.cover_image
+        # Nëse ka file lokal (për backwards compatibility)
         if self.cover_file:
             return self.cover_file.url
-        return self.cover_image or ''
+        return ''
 
     def save(self, *args, **kwargs):
-        """Auto-populate cover_image nga cover_file nëse nuk është vendosur"""
-        send_now = self.send_push_now
-        self.send_push_now = False
-        if self.cover_file and not self.cover_image:
-            # Save për të marrë URL-në e file
-            super().save(*args, **kwargs)
-            # Pas save-it, cover_file.url është i disponueshëm
-            if not self.cover_image:
-                self.cover_image = self.cover_file.url
-                super().save(update_fields=['cover_image'])
-        else:
-            super().save(*args, **kwargs)
-        if send_now and self.is_active:
-            send_book_notification(self)
+        """Save me logjikë për notification"""
+        is_new = self.pk is None
+        should_send_push = self.send_push_now
+
+        # Get old instance për krahasim nëse është update
+        old_instance = None
+        if not is_new and should_send_push:
+            try:
+                old_instance = Book.objects.get(pk=self.pk)
+            except Book.DoesNotExist:
+                pass
+
+        # Reset send_push_now
+        if should_send_push:
+            self.send_push_now = False
+
+        # Save normal
+        super().save(*args, **kwargs)
+
+        # Send notification nëse u kërkua
+        if should_send_push and self.is_active and self.pk:
+            from django.db import transaction
+
+            def send_notification():
+                from notifications_api.services import send_book_notification, send_book_update_notification
+
+                # Determine notification type
+                if is_new or not self.notification_sent:
+                    # New book or first time notification
+                    send_book_notification(self)
+                else:
+                    # Update notification
+                    send_book_update_notification(self, old_instance)
+
+            transaction.on_commit(send_notification)
 
 
 
