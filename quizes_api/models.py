@@ -10,6 +10,12 @@ class Quiz(models.Model):
     title = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    send_push_now = models.BooleanField(
+        default=False,
+        verbose_name='Dërgo njoftim',
+        help_text='✓ Shëno për të dërguar push notification kur ruhet kuizi'
+    )
+
     # Tracking
     notification_sent = models.BooleanField(default=False, verbose_name='Njoftimi u dërgua')
     notification_sent_at = models.DateTimeField(null=True, blank=True, verbose_name='Dërguar më')
@@ -21,6 +27,28 @@ class Quiz(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        """Save me logjikë për notification"""
+        is_new = self.pk is None
+        should_send_push = self.send_push_now
+
+        # Reset send_push_now
+        if should_send_push:
+            self.send_push_now = False
+
+        # Save normal
+        super().save(*args, **kwargs)
+
+        # Send notification nëse u kërkua
+        if should_send_push and self.pk:
+            from django.db import transaction
+
+            def send_notification():
+                from notifications_api.services import send_quiz_notification
+                send_quiz_notification(self)
+
+            transaction.on_commit(send_notification)
 
 
 class Question(models.Model):

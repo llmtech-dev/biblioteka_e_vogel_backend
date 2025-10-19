@@ -226,98 +226,32 @@ def send_book_update_notification(book, old_instance=None):
 
     return success, response
 
-
-# def send_book_notification(book):
-#     """Dërgon notifikim për libër të ri dhe e track"""
-#
-#     # Prevent duplicate notifications
-#     if book.notification_sent:
-#         logger.warning(f"Notification already sent for book {book.id}")
-#         return False, "Notification already sent"
-#
-#     title = "📚 Libër i ri!"
-#     body = f"{book.title} nga {book.author}"
-#
-#     # Get absolute URLs
-#     cover_url = book.get_cover_url()
-#     pdf_url = ''
-#
-#     # Handle PDF URL
-#     if book.pdf_path and book.pdf_path.startswith('http'):
-#         pdf_url = book.pdf_path
-#     elif book.pdf_file:
-#         try:
-#             # Get absolute URL for local files
-#             from django.contrib.sites.models import Site
-#             current_site = Site.objects.get_current()
-#             domain = f"https://{current_site.domain}"
-#
-#             # For local development
-#             if 'localhost' in domain or '127.0.0.1' in domain:
-#                 domain = "http://127.0.0.1:8000"
-#
-#             pdf_url = f"{domain}{book.pdf_file.url}"
-#         except Exception as e:
-#             logger.error(f"Error getting PDF URL: {e}")
-#             pdf_url = book.pdf_file.url if book.pdf_file else ''
-#
-#     # Build notification data
-#     data = {
-#         'type': 'newBook',
-#         'book_id': str(book.id),
-#         'title': book.title,
-#         'author': book.author,
-#         'category': book.category,
-#         'cover_url': cover_url or '',
-#         'pdf_url': pdf_url or '',
-#         'timestamp': timezone.now().isoformat(),
-#     }
-#
-#     # Log for debugging
-#     logger.info(f"📨 Sending notification for book: {book.title}")
-#     logger.info(f"📊 Notification data: {json.dumps(data, indent=2)}")
-#
-#     success, response = send_notification_to_all(title, body, data)
-#
-#     if success:
-#         # Update book notification status
-#         Book.objects.filter(pk=book.pk).update(
-#             notification_sent=True,
-#             notification_sent_at=timezone.now(),
-#             notification_count=models.F('notification_count') + 1,
-#             send_push_now=False
-#         )
-#         logger.info(f"✅ Notification sent successfully for book {book.id}")
-#     else:
-#         logger.error(f"❌ Failed to send notification: {response}")
-#
-#     return success, response
-
-
 def send_quiz_notification(quiz):
     """Dërgon notifikim për kuiz të ri dhe e track"""
     question_count = quiz.questions.count()
 
     title = "🎯 Kuiz i ri!"
-    body = f"{quiz.title} - {question_count} pyetje për '{quiz.book.title}'"
+    body = f"{quiz.title} - {question_count} pyetje"
 
+    # ✅ Shto quiz data të plota
     data = {
-        'type': 'newQuiz',
+        'type': 'new_quiz',
         'quiz_id': str(quiz.id),
         'book_id': str(quiz.book.id),
         'quiz_title': quiz.title,
         'book_title': quiz.book.title,
         'question_count': str(question_count),
         'category': str(quiz.book.category),
+        'timestamp': timezone.now().isoformat(),
     }
 
     # Shto cover image nëse ka
-    if quiz.book.cover_image:
-        data['cover_image'] = quiz.book.cover_image
+    cover_url = quiz.book.get_cover_url()
+    if cover_url:
+        data['cover_url'] = cover_url
 
     success, response = send_notification_to_all(title, body, data)
 
-    # ✅ Track notification
     if success:
         quiz.notification_sent = True
         quiz.notification_sent_at = timezone.now()

@@ -2,33 +2,53 @@ from rest_framework import serializers
 from .models import Quiz, Question, AnswerOption
 
 
+# class AnswerOptionSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = AnswerOption
+#         fields = ['text']
+#
+#     def to_representation(self, instance):
+#         return {
+#             'text': instance.text
+#         }
+#
+#
+# class QuestionSerializer(serializers.ModelSerializer):
+#     id = serializers.UUIDField(read_only=True)  # ✅ UUID
+#     options = AnswerOptionSerializer(many=True, read_only=True)
+#
+#     class Meta:
+#         model = Question
+#         fields = ['id', 'text', 'options', 'correct_option_index']
+#
+#     def to_representation(self, instance):
+#         return {
+#             'id': str(instance.id),  # ✅ Konverto në string
+#             'text': instance.text,
+#             'options': [opt['text'] for opt in self.fields['options'].to_representation(instance.options.all())],
+#             'correctOptionIndex': instance.correct_option_index
+#         }
+
 class AnswerOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnswerOption
         fields = ['text']
 
-    def to_representation(self, instance):
-        return {
-            'text': instance.text
-        }
-
 
 class QuestionSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(read_only=True)  # ✅ UUID
-    options = AnswerOptionSerializer(many=True, read_only=True)
+    options = serializers.SerializerMethodField()
 
-    class Meta:
-        model = Question
-        fields = ['id', 'text', 'options', 'correct_option_index']
+    def get_options(self, obj):
+        # Kthe si objekte me 'text' field
+        return [{"text": opt.text} for opt in obj.options.all().order_by('order')]
 
     def to_representation(self, instance):
         return {
-            'id': str(instance.id),  # ✅ Konverto në string
+            'id': str(instance.id),
             'text': instance.text,
-            'options': [opt['text'] for opt in self.fields['options'].to_representation(instance.options.all())],
+            'options': self.get_options(instance),
             'correctOptionIndex': instance.correct_option_index
         }
-
 
 class QuizSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)  # ✅ UUID
