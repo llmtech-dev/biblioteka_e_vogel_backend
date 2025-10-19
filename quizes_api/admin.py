@@ -3,23 +3,25 @@ from django.contrib import admin
 from django.utils import timezone
 from .models import Quiz, Question, AnswerOption
 from notifications_api.services import send_quiz_notification
+import nested_admin
 
 
-class AnswerOptionInline(admin.TabularInline):
+class AnswerOptionInline(nested_admin.NestedTabularInline):
     model = AnswerOption
     extra = 4  # Për 4 opsione
     min_num = 2
     max_num = 4
 
 
-class QuestionInline(admin.StackedInline):
+class QuestionInline(nested_admin.NestedStackedInline):
     model = Question
+    inlines = [AnswerOptionInline]
     extra = 1
     fields = ['text', 'correct_option_index', 'order']
 
 
 @admin.register(Quiz)
-class QuizAdmin(admin.ModelAdmin):
+class QuizAdmin(nested_admin.NestedModelAdmin):
     list_display = [
         'title', 'book', 'get_question_count',
         'notification_sent', 'created_at'
@@ -106,7 +108,7 @@ class QuizAdmin(admin.ModelAdmin):
 
 
 @admin.register(Question)
-class QuestionAdmin(admin.ModelAdmin):
+class QuestionAdmin(nested_admin.NestedModelAdmin):
     list_display = ['get_short_text', 'quiz', 'correct_option_index', 'order']
     list_filter = ['quiz__book__category']
     search_fields = ['text', 'quiz__title']
