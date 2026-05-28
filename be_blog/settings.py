@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-i$fq3+xs#vdl(e^synd-ca*(p_bgt@7@d1=g!%-5q%w)jflm56
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.243.154', 'localhost', '127.0.0.1', 'permamat.pythonanywhere.com', '192.168.56.1']
+ALLOWED_HOSTS = ['192.168.243.154', 'localhost', '127.0.0.1', 'permamat.pythonanywhere.com', '192.168.56.1', '5def-109-234-233-158.ngrok-free.app']
 # ALLOWED_HOSTS = ['*']
 
 if not DEBUG:
@@ -168,7 +168,8 @@ REST_FRAMEWORK = {
 #perkohesisht
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://192.168.243.154:8000", "https://permamat.pythonanywhere.com", "http://192.168.56.1:8000"
+    "http://192.168.243.154:8000", "https://permamat.pythonanywhere.com", "http://192.168.56.1:8000",
+    "https://5def-109-234-233-158.ngrok-free.app"
 ]
 
 FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'firebase-credentials.json')

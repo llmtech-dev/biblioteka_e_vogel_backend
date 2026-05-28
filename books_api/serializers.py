@@ -34,72 +34,41 @@ class BookListSerializer(serializers.ModelSerializer):
         ]
 
     def get_coverImage(self, obj):
-        """Merr URL-në e cover - gjithmonë absolute"""
+        """
+        Kthen URL-në e cover.
+        - Cloudinary / URL e jashtme (fillon me http) → absolute URL, nuk ndryshon kurrë
+        - Fajll lokal → PATH RELATIV (/media/covers/xxx.jpg)
+          Flutter e ndërton URL-në e plotë me AppConfig.baseUrl
+          Kjo do të thotë: ndryshimi i ngrok-ut nuk e prish SQLite-n e Flutter-it
+        """
         try:
             cover_url = obj.get_cover_url()
-
-            # ✅ Kontrollo nëse është bosh
             if not cover_url:
-                logger.warning(f"Book {obj.id} has no cover image")
                 return ''
-
-            # ✅ Nëse është Cloudinary URL (starts with http)
+            # Cloudinary ose URL e jashtme absolute — kthe ashtu siç është
             if cover_url.startswith('http'):
-                logger.info(f"Cover URL (Cloudinary): {cover_url}")
                 return cover_url
-
-            # ✅ Nëse është local file, bëje absolute
-            request = self.context.get('request')
-            if request:
-                absolute_url = request.build_absolute_uri(cover_url)
-                logger.info(f"Cover URL (local): {absolute_url}")
-                return absolute_url
-
-            # ✅ Fallback - build manual URL
-            from django.conf import settings
-            base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
-            absolute_url = f"{base_url}{cover_url}"
-            logger.warning(f"No request context, using BASE_URL: {absolute_url}")
-            return absolute_url
-
+            # Fajll lokal — kthe vetëm path-in relativ
+            # p.sh. /media/covers/test.jpg  (jo https://ngrok-xxx.app/media/...)
+            return cover_url  # tashmë është relative: /media/covers/...
         except Exception as e:
             logger.error(f"Error getting cover image for book {obj.id}: {e}")
             return ''
 
     def get_pdfPath(self, obj):
-        """Merr URL-në e PDF - gjithmonë absolute"""
+        """
+        Kthen URL-në e PDF.
+        - Cloudinary / URL e jashtme → absolute URL
+        - Fajll lokal → PATH RELATIV (/media/pdfs/xxx.pdf)
+        """
         try:
-            # ✅ Priority për pdf_path nëse është Cloudinary
             if obj.pdf_path and obj.pdf_path.startswith('http'):
-                logger.info(f"PDF URL (Cloudinary): {obj.pdf_path}")
                 return obj.pdf_path
-
-            # ✅ Nëse ka pdf_file (local)
             if obj.pdf_file:
-                request = self.context.get('request')
-                if request:
-                    absolute_url = request.build_absolute_uri(obj.pdf_file.url)
-                    logger.info(f"PDF URL (local): {absolute_url}")
-                    return absolute_url
-
-                # Fallback
-                from django.conf import settings
-                base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
-                absolute_url = f"{base_url}{obj.pdf_file.url}"
-                logger.warning(f"No request context for PDF, using BASE_URL: {absolute_url}")
-                return absolute_url
-
-            # ✅ Nëse ka pdf_path por nuk është Cloudinary (local path)
+                return obj.pdf_file.url   # p.sh. /media/pdfs/test.pdf
             if obj.pdf_path:
-                request = self.context.get('request')
-                if request and not obj.pdf_path.startswith('/'):
-                    return obj.pdf_path  # Relative path
-                elif request:
-                    return request.build_absolute_uri(obj.pdf_path)
-
-            logger.warning(f"Book {obj.id} has no PDF")
+                return obj.pdf_path
             return ''
-
         except Exception as e:
             logger.error(f"Error getting PDF path for book {obj.id}: {e}")
             return ''
@@ -139,57 +108,28 @@ class BookDetailSerializer(serializers.ModelSerializer):
         ]
 
     def get_coverImage(self, obj):
-        """Merr URL-në e cover - gjithmonë absolute"""
+        """Kthe URL absolute (Cloudinary) ose path relativ (lokal)."""
         try:
             cover_url = obj.get_cover_url()
-
             if not cover_url:
                 return ''
-
-            # Cloudinary URL
             if cover_url.startswith('http'):
                 return cover_url
-
-            # Local file me request
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(cover_url)
-
-            # Fallback
-            from django.conf import settings
-            base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
-            return f"{base_url}{cover_url}"
-
+            return cover_url
         except Exception as e:
             logger.error(f"Error getting cover for book {obj.id}: {e}")
             return ''
 
     def get_pdfPath(self, obj):
-        """Merr URL-në e PDF - gjithmonë absolute"""
+        """Kthe URL absolute (Cloudinary) ose path relativ (lokal)."""
         try:
-            # Cloudinary URL
             if obj.pdf_path and obj.pdf_path.startswith('http'):
                 return obj.pdf_path
-
-            # Local file
             if obj.pdf_file:
-                request = self.context.get('request')
-                if request:
-                    return request.build_absolute_uri(obj.pdf_file.url)
-
-                # Fallback
-                from django.conf import settings
-                base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
-                return f"{base_url}{obj.pdf_file.url}"
-
-            # Local path në pdf_path
+                return obj.pdf_file.url
             if obj.pdf_path:
-                request = self.context.get('request')
-                if request:
-                    return request.build_absolute_uri(obj.pdf_path)
-
+                return obj.pdf_path
             return ''
-
         except Exception as e:
             logger.error(f"Error getting PDF for book {obj.id}: {e}")
             return ''

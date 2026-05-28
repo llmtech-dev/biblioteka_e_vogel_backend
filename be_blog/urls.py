@@ -8,7 +8,7 @@ urlpatterns = [
     path('api/books/', include('books_api.urls')),
     path('api/quizzes/', include('quizes_api.urls')),
     path('api/notifications/', include('notifications_api.urls')),
-    path(r'^_nested_admin/', include('nested_admin.urls')),
+    path('_nested_admin/', include('nested_admin.urls')),
 ]
 
 # Servo media files në development
