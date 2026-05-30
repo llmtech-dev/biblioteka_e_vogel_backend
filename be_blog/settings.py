@@ -28,12 +28,12 @@ SECRET_KEY = 'django-insecure-i$fq3+xs#vdl(e^synd-ca*(p_bgt@7@d1=g!%-5q%w)jflm56
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.243.154', 'localhost', '127.0.0.1', 'permamat.pythonanywhere.com', '192.168.56.1', '5def-109-234-233-158.ngrok-free.app']
+ALLOWED_HOSTS = ['192.168.243.154', 'localhost', '127.0.0.1', 'thesarislam.pythonanywhere.com', '192.168.56.1', '5def-109-234-233-158.ngrok-free.app']
 # ALLOWED_HOSTS = ['*']
 
 if not DEBUG:
     # Upload firebase-credentials.json manually në PythonAnywhere
-    FIREBASE_CREDENTIALS_PATH = '/home/permamat/biblioteka_e_vogel_backend/firebase-credentials.json'
+    FIREBASE_CREDENTIALS_PATH = '/home/thesarislam/biblioteka_e_vogel_backend/firebase-credentials.json'
     CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
     CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
     CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
@@ -168,7 +168,7 @@ REST_FRAMEWORK = {
 #perkohesisht
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://192.168.243.154:8000", "https://permamat.pythonanywhere.com", "http://192.168.56.1:8000",
+    "http://192.168.243.154:8000", "https://thesarislam.pythonanywhere.com", "http://192.168.56.1:8000",
     "https://5def-109-234-233-158.ngrok-free.app"
 ]
 
