@@ -52,24 +52,22 @@ class BookViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['get'])
     def check_updates(self, request):
-        """Kontrollon për libra të rinj pas një date të caktuar"""
         last_sync = request.query_params.get('last_sync', None)
         if last_sync:
             try:
-                sync_date = datetime.fromisoformat(last_sync)
-                books = Book.objects.filter(
-                    created_at__gt=sync_date,
-                    is_active=True
-                )
-            except:
+                sync_date = datetime.fromisoformat(last_sync.replace('Z', '+00:00'))
+                books = Book.objects.filter(updated_at__gt=sync_date, is_active=True)
+            except ValueError:
                 books = Book.objects.filter(is_active=True)
         else:
             books = Book.objects.filter(is_active=True)
 
-        serializer = BookListSerializer(books, many=True, context={'request': request})
+        # FIX: Përdor BookDetailSerializer jo BookListSerializer
+        serializer = BookDetailSerializer(books, many=True, context={'request': request})
         return Response({
             'new_books': serializer.data,
-            'count': books.count()
+            'count': books.count(),
+            'sync_date': timezone.now().isoformat()
         })
 
     @action(detail=True, methods=['get'])
