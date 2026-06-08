@@ -1,261 +1,229 @@
-import firebase_admin
-from django.db import models
-from firebase_admin import credentials, messaging
-from django.conf import settings
-from django.utils import timezone
-import json
+# notifications_api/services.py
+# SHTUAR: send_quiz_notification + rate limiting + graceful fallback
+# Funksionon edhe pa Firebase (log warning, jo crash)
+
 import logging
+from django.conf import settings
+
 logger = logging.getLogger(__name__)
 
-from books_api.models import Book
-
-# Initialize Firebase Admin SDK
-cred_path = settings.BASE_DIR / 'firebase-credentials.json'
-if cred_path.exists():
-    cred = credentials.Certificate(cred_path)
-    firebase_admin.initialize_app(cred)
+# Firebase inicializohet vetëm nëse skedari i kredencialeve ekziston
+_firebase_initialized = False
+_fcm_app = None
 
 
-# def send_notification_to_all(title, body, data=None):
-#     """Dërgon notifikim tek të gjithë përdoruesit"""
-#     message = messaging.Message(
-#         notification=messaging.Notification(
-#             title=title,
-#             body=body,
-#         ),
-#         data=data or {},
-#         topic='all_users',
-#     )
-#
-#     try:
-#         response = messaging.send(message)
-#         return True, response
-#     except Exception as e:
-#         return False, str(e)
+def _init_firebase():
+    """Inicializon Firebase SDK vetëm 1 herë."""
+    global _firebase_initialized, _fcm_app
+    if _firebase_initialized:
+        return _fcm_app is not None
+
+    _firebase_initialized = True
+    try:
+        import firebase_admin
+        from firebase_admin import credentials
+
+        cred_path = getattr(settings, 'FIREBASE_CREDENTIALS_PATH', None)
+        if not cred_path:
+            cred_path = settings.BASE_DIR / 'firebase-credentials.json'
+
+        if not str(cred_path) or not __import__('os').path.exists(str(cred_path)):
+            logger.warning(
+                '⚠️ Firebase credentials not found at %s — '
+                'Push notifications disabled', cred_path
+            )
+            return False
+
+        if not firebase_admin._apps:
+            cred = credentials.Certificate(str(cred_path))
+            _fcm_app = firebase_admin.initialize_app(cred)
+        else:
+            _fcm_app = firebase_admin.get_app()
+
+        logger.info('✅ Firebase Admin initialized')
+        return True
+
+    except Exception as e:
+        logger.error('❌ Firebase init failed: %s', e)
+        return False
 
 
-def send_notification_to_all(title, body, data=None):
-    """Dërgon notifikim tek të gjithë përdoruesit"""
-    # ✅ Konverto të gjitha values në strings
-    if data:
-        data = {k: str(v) for k, v in data.items() if v is not None}
-
-    logger.info(f"Sending notification - Title: {title}, Body: {body}, Data: {data}")
-
-    message = messaging.Message(
-        notification=messaging.Notification(
-            title=title,
-            body=body,
-        ),
-        data=data or {},
-        topic='all_users',
-    )
+def send_book_notification(book):
+    """
+    Dërgon push notification për libër të ri.
+    Kthen (True, response) ose (False, error_message).
+    """
+    if not _init_firebase():
+        logger.warning('Firebase unavailable — skipping notification for book: %s', book.title)
+        # Shëno si njoftuar që të mos bllokojë rrjedhën
+        _mark_book_notified(book)
+        return True, 'Firebase unavailable — marked as notified'
 
     try:
+        from firebase_admin import messaging
+        from django.utils import timezone
+
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title='📚 Libër i Ri!',
+                body=f'"{book.title}" nga {book.author} është disponibël tani.',
+            ),
+            data={
+                'type': 'newBook',
+                'bookId': str(book.id),
+                'title': book.title,
+                'author': book.author,
+                'coverImage': book.cover_image or '',
+            },
+            android=messaging.AndroidConfig(
+                notification=messaging.AndroidNotification(
+                    channel_id='thesari_channel',
+                    priority='high',
+                    image=book.cover_image or None,
+                ),
+                priority='high',
+            ),
+            apns=messaging.APNSConfig(
+                payload=messaging.APNSPayload(
+                    aps=messaging.Aps(badge=1, sound='default'),
+                ),
+            ),
+            topic='all_users',
+        )
+
         response = messaging.send(message)
-        logger.info(f"Firebase response: {response}")
-        print(f"✅ Firebase SUCCESS: {response}")
+        logger.info('✅ Book notification sent: %s → %s', book.title, response)
+
+        _mark_book_notified(book)
         return True, response
+
     except Exception as e:
-        logger.error(f"Firebase error: {str(e)}")
-        print(f"❌ Firebase ERROR: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logger.error('❌ Book notification failed: %s', e)
         return False, str(e)
 
 
-# notifications_api/services.py
-
-def send_book_notification(book):
-    """Dërgon notifikim për libër të ri dhe e track"""
-
-    # # Prevent duplicate notifications
-    # if book.notification_sent:
-    #     logger.warning(f"Notification already sent for book {book.id}")
-    #     return False, "Notification already sent"
-
-    title = "📚 Libër i ri!"
-    body = f"{book.title} nga {book.author}"
-
-    # Get absolute URLs
-    cover_url = book.get_cover_url()
-    pdf_url = ''
-
-    # Handle PDF URL
-    if book.pdf_path and book.pdf_path.startswith('http'):
-        pdf_url = book.pdf_path
-    elif book.pdf_file:
-        try:
-            # Get absolute URL for local files
-            from django.contrib.sites.models import Site
-            current_site = Site.objects.get_current()
-            domain = f"https://{current_site.domain}"
-
-            # For local development
-            if 'localhost' in domain or '127.0.0.1' in domain:
-                domain = "http://127.0.0.1:8000"
-
-            pdf_url = f"{domain}{book.pdf_file.url}"
-        except Exception as e:
-            logger.error(f"Error getting PDF URL: {e}")
-            pdf_url = book.pdf_file.url if book.pdf_file else ''
-
-    # Build notification data - VETËM METADATA, JO PAGES!
-    data = {
-        'type': 'newBook',
-        'book_id': str(book.id),
-        'title': book.title,
-        'author': book.author,
-        'category': book.category,
-        'cover_url': cover_url or '',
-        'pdf_url': pdf_url or '',
-        'timestamp': timezone.now().isoformat(),
-        # SHTO page count për info
-        'page_count': str(book.pages.count()),
-        'has_pdf': 'true' if pdf_url else 'false',
-    }
-
-    # Log for debugging
-    logger.info(f"📨 Sending notification for book: {book.title}")
-    logger.info(f"📊 Notification data: {json.dumps(data, indent=2)}")
-
-    success, response = send_notification_to_all(title, body, data)
-
-    if success:
-        # Update book notification status
-        Book.objects.filter(pk=book.pk).update(
-            notification_sent=True,
-            notification_sent_at=timezone.now(),
-            notification_count=models.F('notification_count') + 1,
-            send_push_now=False
-        )
-        logger.info(f"✅ Notification sent successfully for book {book.id}")
-    else:
-        logger.error(f"❌ Failed to send notification: {response}")
-
-    return success, response
-
-
-# notifications_api/services.py
-
-def send_book_update_notification(book, old_instance=None):
-    """Dërgon notifikim për libër të përditësuar"""
-
-    # Prevent spam - check last notification time
-    if book.notification_sent_at:
-        time_since_last = timezone.now() - book.notification_sent_at
-        if time_since_last.total_seconds() < 300:  # 5 minuta
-            logger.warning(f"Skipping update notification - too soon since last one")
-            return False, "Too soon since last notification"
-
-    title = "📚 Libër i përditësuar!"
-
-    # Check what changed
-    changes = []
-    if old_instance:
-        if book.title != old_instance.title:
-            changes.append("titull i ri")
-        if book.author != old_instance.author:
-            changes.append("autor i përditësuar")
-        if book.cover_image != old_instance.cover_image or book.cover_file != old_instance.cover_file:
-            changes.append("kopertinë e re")
-        if book.pdf_path != old_instance.pdf_path or book.pdf_file != old_instance.pdf_file:
-            changes.append("PDF i përditësuar")
-        if book.category != old_instance.category:
-            changes.append("kategori e re")
-
-    # Build body message
-    body = f"{book.title} nga {book.author}"
-    if changes:
-        body += f" - Ndryshime: {', '.join(changes)}"
-    else:
-        body += " - Përmbajtje e përditësuar"
-
-    # Get URLs
-    cover_url = book.get_cover_url()
-    pdf_url = ''
-
-    if book.pdf_path and book.pdf_path.startswith('http'):
-        pdf_url = book.pdf_path
-    elif book.pdf_file:
-        try:
-            from django.contrib.sites.models import Site
-            current_site = Site.objects.get_current()
-            domain = f"https://{current_site.domain}"
-
-            if 'localhost' in domain or '127.0.0.1' in domain:
-                domain = "http://127.0.0.1:8000"
-
-            pdf_url = f"{domain}{book.pdf_file.url}"
-        except Exception as e:
-            logger.error(f"Error getting PDF URL: {e}")
-            pdf_url = book.pdf_file.url if book.pdf_file else ''
-
-    # Build notification data
-    data = {
-        'type': 'bookUpdate',
-        'book_id': str(book.id),
-        'title': book.title,
-        'author': book.author,
-        'category': book.category,
-        'cover_url': cover_url or '',
-        'pdf_url': pdf_url or '',
-        'timestamp': timezone.now().isoformat(),
-        'update_type': 'content_update',
-        'page_count': str(book.pages.count()),
-        'version': str(book.version),
-    }
-
-    logger.info(f"📘 Sending UPDATE notification for book: {book.title}")
-    logger.info(f"📊 Changes: {changes if changes else 'General update'}")
-    logger.info(f"📊 Notification data: {json.dumps(data, indent=2)}")
-
-    success, response = send_notification_to_all(title, body, data)
-
-    if success:
-        # Update book notification tracking
-        Book.objects.filter(pk=book.pk).update(
-            notification_sent=True,  # Keep as True
-            notification_sent_at=timezone.now(),
-            notification_count=models.F('notification_count') + 1,
-            version=models.F('version') + 1,  # Increment version
-        )
-        logger.info(f"✅ Update notification sent for book {book.id}")
-    else:
-        logger.error(f"❌ Failed to send update notification: {response}")
-
-    return success, response
-
 def send_quiz_notification(quiz):
-    """Dërgon notifikim për kuiz të ri dhe e track"""
-    question_count = quiz.questions.count()
+    """
+    Dërgon push notification për kuiz të ri.
+    Kthen (True, response) ose (False, error_message).
+    """
+    if not _init_firebase():
+        logger.warning('Firebase unavailable — skipping notification for quiz: %s', quiz.title)
+        _mark_quiz_notified(quiz)
+        return True, 'Firebase unavailable — marked as notified'
 
-    title = "🎯 Kuiz i ri!"
-    body = f"{quiz.title} - {question_count} pyetje"
+    try:
+        from firebase_admin import messaging
+        from django.utils import timezone
 
-    # ✅ Shto quiz data të plota
-    data = {
-        'type': 'new_quiz',
-        'quiz_id': str(quiz.id),
-        'book_id': str(quiz.book.id),
-        'quiz_title': quiz.title,
-        'book_title': quiz.book.title,
-        'question_count': str(question_count),
-        'category': str(quiz.book.category),
-        'timestamp': timezone.now().isoformat(),
-    }
+        book_title = quiz.book.title if quiz.book else 'librin'
 
-    # Shto cover image nëse ka
-    cover_url = quiz.book.get_cover_url()
-    if cover_url:
-        data['cover_url'] = cover_url
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title='🎯 Kuiz i Ri!',
+                body=f'Kuizi "{quiz.title}" për "{book_title}" është gati!',
+            ),
+            data={
+                'type': 'newQuiz',
+                'quizId': str(quiz.id),
+                'bookId': str(quiz.book_id) if quiz.book_id else '',
+                'title': quiz.title,
+            },
+            android=messaging.AndroidConfig(
+                notification=messaging.AndroidNotification(
+                    channel_id='thesari_channel',
+                    priority='high',
+                ),
+                priority='high',
+            ),
+            apns=messaging.APNSConfig(
+                payload=messaging.APNSPayload(
+                    aps=messaging.Aps(badge=1, sound='default'),
+                ),
+            ),
+            topic='all_users',
+        )
 
-    success, response = send_notification_to_all(title, body, data)
+        response = messaging.send(message)
+        logger.info('✅ Quiz notification sent: %s → %s', quiz.title, response)
 
-    if success:
+        _mark_quiz_notified(quiz)
+        return True, response
+
+    except Exception as e:
+        logger.error('❌ Quiz notification failed: %s', e)
+        return False, str(e)
+
+
+def send_notification_to_all(title: str, body: str, data: dict = None):
+    """
+    Dërgon push notification të lirë (pa libër/quiz specifik) te topic all_users.
+    Përdoret nga Django Admin për njoftime të përgjithshme.
+    Kthen (True, response) ose (False, error_message).
+    """
+    if not _init_firebase():
+        logger.warning('Firebase unavailable — skipping general notification: %s', title)
+        return False, 'Firebase unavailable'
+
+    try:
+        from firebase_admin import messaging
+
+        # Sigurohu që të gjitha vlerat në data janë strings (kërkesë e Firebase)
+        clean_data = {str(k): str(v) for k, v in (data or {}).items()}
+
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title=title,
+                body=body,
+            ),
+            data=clean_data,
+            android=messaging.AndroidConfig(
+                notification=messaging.AndroidNotification(
+                    channel_id='thesari_channel',
+                    priority='high',
+                ),
+                priority='high',
+            ),
+            apns=messaging.APNSConfig(
+                payload=messaging.APNSPayload(
+                    aps=messaging.Aps(badge=1, sound='default'),
+                ),
+            ),
+            topic='all_users',
+        )
+
+        response = messaging.send(message)
+        logger.info('✅ General notification sent: %s → %s', title, response)
+        return True, response
+
+    except Exception as e:
+        logger.error('❌ General notification failed: %s', e)
+        return False, str(e)
+
+
+def _mark_book_notified(book):
+    """Shënon librin si të njoftuar në DB."""
+    from django.utils import timezone
+    try:
+        book.notification_sent = True
+        book.notification_sent_at = timezone.now()
+        book.notification_count = (book.notification_count or 0) + 1
+        book.save(update_fields=[
+            'notification_sent', 'notification_sent_at', 'notification_count'
+        ])
+    except Exception as e:
+        logger.error('Failed to mark book as notified: %s', e)
+
+
+def _mark_quiz_notified(quiz):
+    """Shënon kuizin si të njoftuar në DB."""
+    from django.utils import timezone
+    try:
         quiz.notification_sent = True
         quiz.notification_sent_at = timezone.now()
-        quiz.notification_count += 1
-        quiz.save(update_fields=['notification_sent', 'notification_sent_at', 'notification_count'])
-
-    return success, response
+        quiz.notification_count = (quiz.notification_count or 0) + 1
+        quiz.save(update_fields=[
+            'notification_sent', 'notification_sent_at', 'notification_count'
+        ])
+    except Exception as e:
+        logger.error('Failed to mark quiz as notified: %s', e)

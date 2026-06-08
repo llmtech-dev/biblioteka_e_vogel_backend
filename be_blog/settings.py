@@ -33,7 +33,7 @@ ALLOWED_HOSTS = ['192.168.243.154', 'localhost', '127.0.0.1', 'thesarislam.pytho
 
 if not DEBUG:
     # Upload firebase-credentials.json manually në PythonAnywhere
-    FIREBASE_CREDENTIALS_PATH = '/home/thesarislam/biblioteka_e_vogel_backend/firebase-credentials.json'
+    # FIREBASE_CREDENTIALS_PATH = BASE_DIR / 'firebase-credentials.json'
     CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
     CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
     CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
@@ -162,7 +162,11 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ]
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
 }
 
 #perkohesisht

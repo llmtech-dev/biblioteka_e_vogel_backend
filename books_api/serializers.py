@@ -183,3 +183,83 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = '__all__'
+
+
+class BookCreateUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer për create/update nga moderatorja.
+    Menaxhon Cloudinary upload automatikisht.
+    """
+    cover_file = serializers.ImageField(required=False, allow_null=True)
+    pdf_file = serializers.FileField(required=False, allow_null=True)
+
+    class Meta:
+        model = Book
+        fields = [
+            'title', 'author', 'translator', 'category',
+            'cover_file', 'cover_image',
+            'pdf_file', 'pdf_path',
+            'is_active', 'send_push_now',
+        ]
+
+    def validate(self, data):
+        # Duhet të ketë të paktën një cover (file ose URL)
+        # cover_image dhe cover_file janë opsionale (mund të shtohet me vonë)
+        return data
+
+    def _upload_to_cloudinary(self, file_obj, folder, resource_type='auto'):
+        from books_api.cloudinary_helper import upload_to_cloudinary
+        result = upload_to_cloudinary(file_obj, folder=folder,
+                                      resource_type=resource_type)
+        if not result['success']:
+            raise serializers.ValidationError(
+                f"Ngarkimi i skedarit dështoi: {result['error']}"
+            )
+        return result['url'], result['public_id']
+
+    def create(self, validated_data):
+        cover_file = validated_data.pop('cover_file', None)
+        pdf_file = validated_data.pop('pdf_file', None)
+
+        book = Book(**validated_data)
+
+        if cover_file:
+            url, public_id = self._upload_to_cloudinary(
+                cover_file, 'book_covers', 'image'
+            )
+            book.cover_image = url
+            book.cover_public_id = public_id
+
+        if pdf_file:
+            url, public_id = self._upload_to_cloudinary(
+                pdf_file, 'book_pdfs', 'raw'
+            )
+            book.pdf_path = url
+            book.pdf_public_id = public_id
+
+        book.save()
+        return book
+
+    def update(self, instance, validated_data):
+        cover_file = validated_data.pop('cover_file', None)
+        pdf_file = validated_data.pop('pdf_file', None)
+
+        if cover_file:
+            url, public_id = self._upload_to_cloudinary(
+                cover_file, 'book_covers', 'image'
+            )
+            instance.cover_image = url
+            instance.cover_public_id = public_id
+
+        if pdf_file:
+            url, public_id = self._upload_to_cloudinary(
+                pdf_file, 'book_pdfs', 'raw'
+            )
+            instance.pdf_path = url
+            instance.pdf_public_id = public_id
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
