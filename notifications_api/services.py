@@ -155,6 +155,75 @@ def send_quiz_notification(quiz):
         return False, str(e)
 
 
+def send_update_book_notification(book):
+    """
+    Dërgon push notification kur një libër ekzistues PËRDITËSOHET
+    (ndryshim content, faqe të reja etj.).
+    E ndarë nga send_book_notification për ta dalluar në analytics.
+    Kthen (True, response) ose (False, error_message).
+    """
+    if not _init_firebase():
+        logger.warning(
+            'Firebase unavailable — skipping update notification for book: %s',
+            book.title
+        )
+        return False, 'Firebase unavailable'
+
+    try:
+        from firebase_admin import messaging
+
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title='📚 Libër i Përditësuar!',
+                body=f'"{book.title}" nga {book.author} ka përmbajtje të re.',
+            ),
+            data={
+                'type': 'bookUpdate',
+                'bookId': str(book.id),
+                'title': book.title,
+                'author': book.author,
+                'coverImage': book.cover_image or '',
+            },
+            android=messaging.AndroidConfig(
+                notification=messaging.AndroidNotification(
+                    channel_id='thesari_channel',
+                    priority='high',
+                    image=book.cover_image or None,
+                ),
+                priority='high',
+            ),
+            apns=messaging.APNSConfig(
+                payload=messaging.APNSPayload(
+                    aps=messaging.Aps(badge=1, sound='default'),
+                ),
+            ),
+            topic='all_users',
+        )
+
+        response = messaging.send(message)
+        logger.info(
+            '✅ Book update notification sent: %s → %s', book.title, response
+        )
+
+        # Përditëso countin pa e shënuar si "të njoftuar herën e parë"
+        try:
+            from django.utils import timezone
+            book.notification_sent = True
+            book.notification_sent_at = timezone.now()
+            book.notification_count = (book.notification_count or 0) + 1
+            book.save(update_fields=[
+                'notification_sent', 'notification_sent_at', 'notification_count'
+            ])
+        except Exception as e:
+            logger.error('Failed to update book notification count: %s', e)
+
+        return True, response
+
+    except Exception as e:
+        logger.error('❌ Book update notification failed: %s', e)
+        return False, str(e)
+
+
 def send_notification_to_all(title: str, body: str, data: dict = None):
     """
     Dërgon push notification të lirë (pa libër/quiz specifik) te topic all_users.
