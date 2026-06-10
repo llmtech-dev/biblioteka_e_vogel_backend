@@ -14,10 +14,12 @@ class CustomUserAdmin(UserAdmin):
     """
     model = CustomUser
 
-    list_display  = ['email', 'name', 'role', 'is_active', 'is_staff', 'date_joined']
+    list_display  = ['email', 'name', 'role', 'is_active', 'is_staff']
     list_filter   = ['role', 'is_active', 'is_staff']
     search_fields = ['email', 'name']
     ordering      = ['-date_joined']
+
+    readonly_fields = ('date_joined',)
 
     # Faqja e ndryshimit të user-it ekzistues
     fieldsets = (
@@ -39,7 +41,7 @@ class CustomUserAdmin(UserAdmin):
             'classes': ('collapse',),
         }),
         ('Datat', {
-            'fields': ('last_login', 'date_joined'),
+            'fields': ('last_login',),
             'classes': ('collapse',),
         }),
     )
