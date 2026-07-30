@@ -79,14 +79,6 @@ class Book(models.Model):
         is_new = self.pk is None
         should_send_push = self.send_push_now
 
-        # Get old instance për krahasim nëse është update
-        old_instance = None
-        if not is_new and should_send_push:
-            try:
-                old_instance = Book.objects.get(pk=self.pk)
-            except Book.DoesNotExist:
-                pass
-
         # Reset send_push_now
         if should_send_push:
             self.send_push_now = False
@@ -99,7 +91,7 @@ class Book(models.Model):
             from django.db import transaction
 
             def send_notification():
-                from notifications_api.services import send_book_notification, send_book_update_notification
+                from notifications_api.services import send_book_notification, send_update_book_notification
 
                 # Determine notification type
                 if is_new or not self.notification_sent:
@@ -107,7 +99,7 @@ class Book(models.Model):
                     send_book_notification(self)
                 else:
                     # Update notification
-                    send_book_update_notification(self, old_instance)
+                    send_update_book_notification(self)
 
             transaction.on_commit(send_notification)
 

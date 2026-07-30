@@ -85,8 +85,14 @@ class QuizSerializer(serializers.ModelSerializer):
 
 class QuizCreateSerializer(serializers.Serializer):
     """
-    Serializer i plotë për krijimin e quiz me pyetje dhe opsione.
+    Serializer i plotë për krijimin/editimin e quiz me pyetje dhe opsione.
     Mbështet transaksion atomik — nëse diçka dështon, asgjë nuk ruhet.
+
+    Përdor konventën standarde të DRF: save() e trashëguar nga Serializer
+    thërret create() kur self.instance është None, ose update() kur ka
+    një instance ekzistuese (rasti i PUT/PATCH). Mos e mbishkruaj save()
+    direkt këtu — nëse e bën, humbet dallimi create/update dhe çdo edit
+    krijon një kuiz të ri në vend që të përditësojë ekzistuesin.
     """
     book = serializers.UUIDField()
     title = serializers.CharField(max_length=255)
@@ -103,21 +109,7 @@ class QuizCreateSerializer(serializers.Serializer):
                 "Libri nuk u gjet ose nuk është aktiv."
             )
 
-    @transaction.atomic
-    def save(self, **kwargs):
-        book = self.validated_data['book']
-        title = self.validated_data['title']
-        send_push = self.validated_data.get('send_push_now', False)
-        questions_data = self.validated_data['questions']
-
-        # Krijo quiz
-        quiz = Quiz.objects.create(
-            book=book,
-            title=title,
-            send_push_now=send_push,
-        )
-
-        # Krijo pyetjet dhe opsionet
+    def _write_questions(self, quiz, questions_data):
         for q_data in questions_data:
             question = Question.objects.create(
                 quiz=quiz,
@@ -132,4 +124,25 @@ class QuizCreateSerializer(serializers.Serializer):
                     order=i,
                 )
 
+    @transaction.atomic
+    def create(self, validated_data):
+        quiz = Quiz.objects.create(
+            book=validated_data['book'],
+            title=validated_data['title'],
+            send_push_now=validated_data.get('send_push_now', False),
+        )
+        self._write_questions(quiz, validated_data['questions'])
         return quiz
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        instance.book = validated_data['book']
+        instance.title = validated_data['title']
+        # send_push_now përdor logjikën e Quiz.save() (dërgon njoftim vetëm nëse True)
+        instance.send_push_now = validated_data.get('send_push_now', False)
+        instance.save()
+
+        # Zëvendëso pyetjet ekzistuese me setin e ri (cascade fshin edhe opsionet)
+        instance.questions.all().delete()
+        self._write_questions(instance, validated_data['questions'])
+        return instance

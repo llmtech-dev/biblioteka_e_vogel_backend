@@ -194,6 +194,9 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
     cover_file = serializers.ImageField(required=False, allow_null=True)
     pdf_file = serializers.FileField(required=False, allow_null=True)
 
+    MAX_PDF_SIZE_MB = 50
+    MAX_COVER_SIZE_MB = 5
+
     class Meta:
         model = Book
         fields = [
@@ -202,6 +205,36 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
             'pdf_file', 'pdf_path',
             'is_active', 'send_push_now',
         ]
+
+    def validate_pdf_file(self, value):
+        if value:
+            if value.size > self.MAX_PDF_SIZE_MB * 1024 * 1024:
+                raise serializers.ValidationError(
+                    f"PDF-ja s'duhet të kalojë {self.MAX_PDF_SIZE_MB}MB."
+                )
+            if not value.name.lower().endswith('.pdf'):
+                raise serializers.ValidationError(
+                    "Skedari duhet të jetë në format PDF (.pdf)."
+                )
+        return value
+
+    def validate_cover_file(self, value):
+        if value and value.size > self.MAX_COVER_SIZE_MB * 1024 * 1024:
+            raise serializers.ValidationError(
+                f"Kopertina s'duhet të kalojë {self.MAX_COVER_SIZE_MB}MB."
+            )
+        return value
+
+    def validate(self, attrs):
+        # Vetëm në krijim: libri duhet të ketë PDF, ose file i ngarkuar ose URL.
+        # Në update s'e detyrojmë sepse instanca ekzistuese mund ta ketë tashmë.
+        if self.instance is None:
+            has_pdf = attrs.get('pdf_file') or attrs.get('pdf_path')
+            if not has_pdf:
+                raise serializers.ValidationError({
+                    'pdf_file': "Libri duhet të ketë një PDF — ngarko një skedar (pdf_file) ose jep pdf_path.",
+                })
+        return attrs
 
     def create(self, validated_data):
         cover_file = validated_data.pop('cover_file', None)

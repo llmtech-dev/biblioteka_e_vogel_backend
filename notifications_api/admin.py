@@ -1,8 +1,12 @@
+import logging
+
 from django.contrib import admin
 from django.contrib import messages
 from .models import Notification
 from .services import send_notification_to_all, send_book_notification, send_quiz_notification
 # from .services import send_multicast_notification, send_book_notification, send_quiz_notification
+
+logger = logging.getLogger(__name__)
 
 
 @admin.register(Notification)
@@ -94,8 +98,7 @@ class NotificationAdmin(admin.ModelAdmin):
                 if notification.image_url:
                     data['image_url'] = str(notification.image_url)
 
-                # ✅ Debug
-                self.stdout.write(f"Sending notification with data: {data}")
+                logger.debug("Sending notification with data: %s", data)
 
                 success, response = send_notification_to_all(
                     title=notification.title,
