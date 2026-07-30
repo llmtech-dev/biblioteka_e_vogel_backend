@@ -15,5 +15,8 @@ urlpatterns = [
     path('_nested_admin/',     include('nested_admin.urls')),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# E shkeputur qellimisht nga settings.DEBUG: /media/ permban permbajtje
+# publike (kopertina/PDF librash) qe duhet aksesueshme edhe kur DEBUG=False
+# ne prodhim (p.sh. skedare te vjetra te ngarkuar lokalisht para se
+# Cloudinary te behej i detyrueshem — shih books_api/serializers.py).
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 from .models import Book, BookPage, PageElement
 import logging
@@ -236,38 +237,61 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
                 })
         return attrs
 
+    def _cloudinary_upload(self, file_obj, folder, resource_type, field_label):
+        """
+        Ngarko te Cloudinary. Ne prodhim (DEBUG=False) kjo eshte e detyrueshme:
+        hosting si Render ka disk jo te perhershem, çdo deploy/restart fshin
+        ruajtjen lokale — nje "fallback i heshtur" atje do te thoshte librat
+        e humbin PDF-ne/kopertinen ne heshtje. Fallback lokal lejohet vetem
+        ne zhvillim (DEBUG=True, p.sh. makina jote).
+        Kthen (url, public_id) kur ka sukses, ose (None, None) kur duhet
+        rene ne fallback lokal (vetem ne DEBUG).
+        """
+        from books_api.cloudinary_helper import upload_to_cloudinary
+        try:
+            result = upload_to_cloudinary(
+                file_obj, folder=folder, resource_type=resource_type
+            )
+        except Exception as e:
+            result = {'success': False, 'error': str(e)}
+
+        if result.get('success'):
+            return result['url'], result.get('public_id', '')
+
+        error_msg = result.get('error', 'gabim i panjohur')
+        logger.error(f'Cloudinary upload failed ({field_label}): {error_msg}')
+        if settings.DEBUG:
+            return None, None
+        raise serializers.ValidationError({
+            field_label: (
+                f"Ngarkimi te Cloudinary deshtoi: {error_msg}. "
+                "Ne prodhim ruajtja lokale s'lejohet (disku s'eshte i perhershem)."
+            )
+        })
+
     def create(self, validated_data):
         cover_file = validated_data.pop('cover_file', None)
         pdf_file = validated_data.pop('pdf_file', None)
         book = Book(**validated_data)
 
         if cover_file:
-            try:
-                from books_api.cloudinary_helper import upload_to_cloudinary
-                result = upload_to_cloudinary(cover_file, folder='book_covers',
-                                              resource_type='image')
-                if result.get('success'):
-                    book.cover_image = result['url']
-                    book.cover_public_id = result.get('public_id', '')
-                else:
-                    # Fallback: ruaj si file lokal
-                    book.cover_file = cover_file
-            except Exception as e:
-                logger.error(f'Cloudinary cover upload failed: {e}')
+            url, public_id = self._cloudinary_upload(
+                cover_file, 'book_covers', 'image', 'cover_file'
+            )
+            if url:
+                book.cover_image = url
+                book.cover_public_id = public_id
+            else:
                 book.cover_file = cover_file
 
         if pdf_file:
-            try:
-                from books_api.cloudinary_helper import upload_to_cloudinary
-                result = upload_to_cloudinary(pdf_file, folder='book_pdfs',
-                                              resource_type='raw')
-                if result.get('success'):
-                    book.pdf_path = result['url']
-                    book.pdf_public_id = result.get('public_id', '')
-                else:
-                    book.pdf_file = pdf_file
-            except Exception as e:
-                logger.error(f'Cloudinary PDF upload failed: {e}')
+            url, public_id = self._cloudinary_upload(
+                pdf_file, 'book_pdfs', 'raw', 'pdf_file'
+            )
+            if url:
+                book.pdf_path = url
+                book.pdf_public_id = public_id
+            else:
                 book.pdf_file = pdf_file
 
         book.save()
@@ -278,31 +302,23 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
         pdf_file = validated_data.pop('pdf_file', None)
 
         if cover_file:
-            try:
-                from books_api.cloudinary_helper import upload_to_cloudinary
-                result = upload_to_cloudinary(cover_file, folder='book_covers',
-                                              resource_type='image')
-                if result.get('success'):
-                    instance.cover_image = result['url']
-                    instance.cover_public_id = result.get('public_id', '')
-                else:
-                    instance.cover_file = cover_file
-            except Exception as e:
-                logger.error(f'Cloudinary cover update failed: {e}')
+            url, public_id = self._cloudinary_upload(
+                cover_file, 'book_covers', 'image', 'cover_file'
+            )
+            if url:
+                instance.cover_image = url
+                instance.cover_public_id = public_id
+            else:
                 instance.cover_file = cover_file
 
         if pdf_file:
-            try:
-                from books_api.cloudinary_helper import upload_to_cloudinary
-                result = upload_to_cloudinary(pdf_file, folder='book_pdfs',
-                                              resource_type='raw')
-                if result.get('success'):
-                    instance.pdf_path = result['url']
-                    instance.pdf_public_id = result.get('public_id', '')
-                else:
-                    instance.pdf_file = pdf_file
-            except Exception as e:
-                logger.error(f'Cloudinary PDF update failed: {e}')
+            url, public_id = self._cloudinary_upload(
+                pdf_file, 'book_pdfs', 'raw', 'pdf_file'
+            )
+            if url:
+                instance.pdf_path = url
+                instance.pdf_public_id = public_id
+            else:
                 instance.pdf_file = pdf_file
 
         for attr, value in validated_data.items():

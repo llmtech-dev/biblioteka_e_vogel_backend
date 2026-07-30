@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 load_dotenv()
 
@@ -23,20 +24,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-i$fq3+xs#vdl(e^synd-ca*(p_bgt@7@d1=g!%-5q%w)jflm56'
+# Vendos SECRET_KEY real ne .env (lokalisht) ose ne env vars te hosting-ut
+# (prodhim). Vlera fallback ketu sherben vetem qe projekti te ngrihet pa
+# .env — MOS e perdor ne prodhim.
+SECRET_KEY = os.getenv(
+    'SECRET_KEY',
+    'django-insecure-dev-only-fallback-vendos-nje-SECRET_KEY-ne-.env',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').strip().lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = ['192.168.243.154', 'localhost', '127.0.0.1', 'thesarislam.pythonanywhere.com', '192.168.56.1', 'f758-109-234-233-169.ngrok-free.app']
-# ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    h.strip() for h in os.getenv(
+        'ALLOWED_HOSTS',
+        '192.168.243.154,localhost,127.0.0.1,thesarislam.pythonanywhere.com,192.168.56.1',
+    ).split(',') if h.strip()
+]
 
-if not DEBUG:
-    # Upload firebase-credentials.json manually në PythonAnywhere
-    # FIREBASE_CREDENTIALS_PATH = BASE_DIR / 'firebase-credentials.json'
-    CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
-    CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
-    CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
 # Application definition
 
 INSTALLED_APPS = [
@@ -96,13 +101,21 @@ WSGI_APPLICATION = 'be_blog.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# DATABASE_URL nga .env/env vars — p.sh. postgres://... per Neon/Render.
+# Nese s'eshte vendosur ose eshte sqlite, perdor db.sqlite3 lokal (default
+# i vjeter, i paprekur, per zhvillim).
+_database_url = os.getenv('DATABASE_URL', '')
+if _database_url and not _database_url.startswith('sqlite'):
+    DATABASES = {
+        'default': dj_database_url.parse(_database_url, conn_max_age=600)
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -176,7 +189,16 @@ CORS_ALLOWED_ORIGINS = [
     "https://5def-109-234-233-158.ngrok-free.app"
 ]
 
-FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'firebase-credentials.json')
+# FIREBASE_CREDENTIALS_PATH ne .env eshte relativ (per zhvillim lokal) —
+# nese jepet nje path absolut (p.sh. ne Render/Docker), perdore direkt.
+_firebase_cred_env = os.getenv('FIREBASE_CREDENTIALS_PATH', '').strip()
+if _firebase_cred_env:
+    FIREBASE_CREDENTIALS_PATH = (
+        _firebase_cred_env if os.path.isabs(_firebase_cred_env)
+        else os.path.join(BASE_DIR, _firebase_cred_env)
+    )
+else:
+    FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'firebase-credentials.json')
 
 # DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
