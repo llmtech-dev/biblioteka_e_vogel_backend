@@ -42,6 +42,26 @@ ALLOWED_HOSTS = [
     ).split(',') if h.strip()
 ]
 
+# Render vendos vetiu kete env var me domain-in real (xxx.onrender.com) —
+# shtoje automatikisht, s'ka nevoje ta japesh dore ne ALLOWED_HOSTS.
+_render_hostname = os.getenv('RENDER_EXTERNAL_HOSTNAME', '').strip()
+if _render_hostname:
+    ALLOWED_HOSTS.append(_render_hostname)
+
+# Django 4+ kerkon qe origjina e kerkeses (Origin header) te jete e
+# besueshme eksplicit per HTTPS POST (admin login etj.) — ndertohet nga
+# ALLOWED_HOSTS, pa e mbajtur si liste te dyfishte per t'u sinkronizuar.
+CSRF_TRUSTED_ORIGINS = [
+    f'https://{h}' for h in ALLOWED_HOSTS if h not in ('localhost', '127.0.0.1')
+]
+
+if not DEBUG:
+    # Render (dhe host-e te ngjashem) terminojne HTTPS ne proxy dhe e
+    # percjellin kerkesen brenda si HTTP + header X-Forwarded-Proto — pa
+    # kete, Django s'e njeh kerkesen si "secure" dhe redirect/cookie-t
+    # e sigurta thyhen.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -69,6 +89,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -159,6 +180,17 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
+# Whitenoise sherben static files (admin CSS/JS etj.) direkt nga Django ne
+# prodhim, pa nevoje per Nginx/CDN te vecante — mjafton per Render.
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 # Media files (User uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -199,6 +231,12 @@ if _firebase_cred_env:
     )
 else:
     FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'firebase-credentials.json')
+
+# Alternative per prodhim (Render etj.): disku eshte i perkohshem, s'ka ku
+# te ngarkosh firebase-credentials.json fizikisht. Jep permbajtjen e plote
+# te JSON-it, base64-enkoduar, si nje env var e vetme — shiko
+# notifications_api/services.py._init_firebase() per perdorimin.
+FIREBASE_CREDENTIALS_JSON_BASE64 = os.getenv('FIREBASE_CREDENTIALS_JSON_BASE64', '').strip()
 
 # DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 

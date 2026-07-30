@@ -20,6 +20,11 @@ db.sqlite3
 /staticfiles
 local_settings.py
 .env
+.env.render
+.env.production
+db.sqlite3.backup
+*_backup.json
+*.zip
 
 # IDE
 .vscode/

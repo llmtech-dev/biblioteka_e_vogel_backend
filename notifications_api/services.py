@@ -12,6 +12,42 @@ _firebase_initialized = False
 _fcm_app = None
 
 
+def _load_firebase_credentials():
+    """
+    Gjen kredencialet Firebase nga dy burime te mundshme:
+    1. FIREBASE_CREDENTIALS_JSON_BASE64 (env var) — per hosting me disk te
+       perkohshem (Render etj.) ku s'ka ku te ngarkosh nje file fizik.
+    2. FIREBASE_CREDENTIALS_PATH (file fizik ne disk) — zhvillim lokal ose
+       PythonAnywhere, ku disku eshte i perhershem.
+    Kthen nje `firebase_admin.credentials.Certificate` ose None.
+    """
+    import base64
+    import json
+    import os
+
+    from firebase_admin import credentials
+
+    cred_json_b64 = getattr(settings, 'FIREBASE_CREDENTIALS_JSON_BASE64', '')
+    if cred_json_b64:
+        try:
+            cred_dict = json.loads(base64.b64decode(cred_json_b64))
+            return credentials.Certificate(cred_dict)
+        except Exception as e:
+            logger.error(
+                '❌ FIREBASE_CREDENTIALS_JSON_BASE64 eshte i pavlefshem: %s', e
+            )
+            return None
+
+    cred_path = getattr(settings, 'FIREBASE_CREDENTIALS_PATH', None)
+    if not cred_path:
+        cred_path = settings.BASE_DIR / 'firebase-credentials.json'
+
+    if str(cred_path) and os.path.exists(str(cred_path)):
+        return credentials.Certificate(str(cred_path))
+
+    return None
+
+
 def _init_firebase():
     """Inicializon Firebase SDK vetëm 1 herë."""
     global _firebase_initialized, _fcm_app
@@ -21,21 +57,17 @@ def _init_firebase():
     _firebase_initialized = True
     try:
         import firebase_admin
-        from firebase_admin import credentials
 
-        cred_path = getattr(settings, 'FIREBASE_CREDENTIALS_PATH', None)
-        if not cred_path:
-            cred_path = settings.BASE_DIR / 'firebase-credentials.json'
-
-        if not str(cred_path) or not __import__('os').path.exists(str(cred_path)):
+        cred = _load_firebase_credentials()
+        if cred is None:
             logger.warning(
-                '⚠️ Firebase credentials not found at %s — '
-                'Push notifications disabled', cred_path
+                '⚠️ Firebase credentials not found (as FIREBASE_CREDENTIALS_'
+                'JSON_BASE64 or FIREBASE_CREDENTIALS_PATH) — Push '
+                'notifications disabled'
             )
             return False
 
         if not firebase_admin._apps:
-            cred = credentials.Certificate(str(cred_path))
             _fcm_app = firebase_admin.initialize_app(cred)
         else:
             _fcm_app = firebase_admin.get_app()
