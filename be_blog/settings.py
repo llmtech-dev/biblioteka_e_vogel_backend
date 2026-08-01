@@ -212,6 +212,13 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
+    # Perdorur nga user_api/throttling.py per te penguar brute-force ne
+    # login/regjistrim/moderator-login — s'kishte asnje kufizim me pare.
+    'DEFAULT_THROTTLE_RATES': {
+        'login': '5/min',
+        'register': '10/hour',
+        'moderator_login': '5/min',
+    },
 }
 
 #perkohesisht

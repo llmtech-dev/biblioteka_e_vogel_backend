@@ -1,7 +1,7 @@
 # user_api/views.py
 # ZËVENDËSO PLOTËSISHT — shton moderator_login_view dhe me_view
 
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework import status
@@ -12,10 +12,16 @@ from .serializers import (
     ChangePasswordSerializer,
     ModeratorLoginSerializer,
 )
+from .throttling import (
+    LoginRateThrottle,
+    RegisterRateThrottle,
+    ModeratorLoginRateThrottle,
+)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([RegisterRateThrottle])
 def registration_view(request):
     serializer = RegistrationSerializer(data=request.data)
     if serializer.is_valid():
@@ -32,6 +38,7 @@ def registration_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([LoginRateThrottle])
 def login_view(request):
     serializer = LoginSerializer(data=request.data)
     if serializer.is_valid():
@@ -48,6 +55,7 @@ def login_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([ModeratorLoginRateThrottle])
 def moderator_login_view(request):
     """
     POST /api/users/moderator-login/

@@ -59,27 +59,24 @@ class ModeratorLoginSerializer(serializers.Serializer):
     Si LoginSerializer por refuzon nëse roli nuk është moderator/admin.
     Kjo është e vetmja mbrojtje — backend-i nuk lejon asnjë user normal
     të marrë akses si moderatore.
+
+    Mesazhi i gabimit eshte qellimisht i njejte per te gjitha rastet
+    (fjalekalim gabim / llogari e caktivizuar / user pa te drejta
+    moderatore) — dallimi do t'i tregonte dikush qe provon email te
+    ndryshem se cili email eshte i regjistruar dhe cili ka role moderator.
     """
     email    = serializers.EmailField()
     password = serializers.CharField()
+
+    GENERIC_ERROR = 'Email ose fjalëkalim i gabuar, ose nuk keni të drejta si moderatore.'
 
     def validate(self, data):
         user = authenticate(
             username=data.get('email'),
             password=data.get('password'),
         )
-        if not user:
-            raise serializers.ValidationError(
-                'Email ose fjalëkalim i gabuar.'
-            )
-        if not user.is_active:
-            raise serializers.ValidationError(
-                'Llogaria është çaktivizuar.'
-            )
-        if not user.is_moderator:
-            raise serializers.ValidationError(
-                'Nuk keni të drejta si moderatore.'
-            )
+        if not user or not user.is_active or not user.is_moderator:
+            raise serializers.ValidationError(self.GENERIC_ERROR)
         return user
 
 
