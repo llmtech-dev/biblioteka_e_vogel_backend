@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'books_api',
     'quizes_api',
     'notifications_api',
+    'daily_content_api',
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',

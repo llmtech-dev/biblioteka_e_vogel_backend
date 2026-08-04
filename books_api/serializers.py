@@ -270,6 +270,15 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
         })
 
     def create(self, validated_data):
+        # DRF trajton nje BooleanField te munguar ne multipart/form-data
+        # (jo-partial) si False EKSPLICITE (konvente HTML checkbox), JO si
+        # "field i paprekur" — validated_data['is_active'] eshte gjithmone
+        # i pranishem (False nese klienti s'e dergoi). Kontrollo initial_data
+        # (input i papërpunuar) per te ditur nese klienti e dergoi vertet.
+        # Flutter e dergon eksplicit 'is_active': 'true' (shih
+        # moderator_api_service.dart uploadBook), kjo eshte mbrojtje shtese.
+        if 'is_active' not in self.initial_data:
+            validated_data['is_active'] = True
         cover_file = validated_data.pop('cover_file', None)
         pdf_file = validated_data.pop('pdf_file', None)
         book = Book(**validated_data)

@@ -328,3 +328,77 @@ def _mark_quiz_notified(quiz):
         ])
     except Exception as e:
         logger.error('Failed to mark quiz as notified: %s', e)
+
+
+_DAILY_CONTENT_TITLES = {
+    'ayah': '🕌 Ajeti i Ditës',
+    'hadith': '📖 Hadithi i Ditës',
+    'advice': '💡 Këshilla e Ditës',
+    'surah_audio': '🎧 Surja e Ditës',
+}
+
+
+def send_daily_content_notification(content):
+    """
+    Dërgon push notification për përmbajtjen e re ditore (ajet/hadith/
+    këshillë/sure). Kthen (True, response) ose (False, error_message).
+    """
+    if not _init_firebase():
+        logger.warning(
+            'Firebase unavailable — skipping notification for daily content: %s',
+            content.id,
+        )
+        _mark_daily_content_notified(content)
+        return True, 'Firebase unavailable — marked as notified'
+
+    try:
+        from firebase_admin import messaging
+
+        title = _DAILY_CONTENT_TITLES.get(content.type, '✨ Përmbajtje e Re')
+        body = content.text if len(content.text) <= 150 else f'{content.text[:147]}...'
+
+        message = messaging.Message(
+            notification=messaging.Notification(title=title, body=body),
+            data={
+                'type': 'dailyContent',
+                'dailyContentId': str(content.id),
+                'contentType': content.type,
+            },
+            android=messaging.AndroidConfig(
+                notification=messaging.AndroidNotification(
+                    channel_id='thesari_channel',
+                    priority='high',
+                ),
+                priority='high',
+            ),
+            apns=messaging.APNSConfig(
+                payload=messaging.APNSPayload(
+                    aps=messaging.Aps(badge=1, sound='default'),
+                ),
+            ),
+            topic='all_users',
+        )
+
+        response = messaging.send(message)
+        logger.info('✅ Daily content notification sent: %s → %s', content.id, response)
+
+        _mark_daily_content_notified(content)
+        return True, response
+
+    except Exception as e:
+        logger.error('❌ Daily content notification failed: %s', e)
+        return False, str(e)
+
+
+def _mark_daily_content_notified(content):
+    """Shënon përmbajtjen ditore si të njoftuar në DB."""
+    from django.utils import timezone
+    try:
+        content.notification_sent = True
+        content.notification_sent_at = timezone.now()
+        content.notification_count = (content.notification_count or 0) + 1
+        content.save(update_fields=[
+            'notification_sent', 'notification_sent_at', 'notification_count'
+        ])
+    except Exception as e:
+        logger.error('Failed to mark daily content as notified: %s', e)
