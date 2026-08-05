@@ -65,6 +65,9 @@ if not DEBUG:
 # Application definition
 
 INSTALLED_APPS = [
+    # Duhet PARA django.contrib.admin — mbishkruan templates e admin-it
+    # pa prekur asnje admin.py ekzistues (books_api, quizes_api etj.).
+    'unfold',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -254,6 +257,31 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
 
+
+# Tema e admin-it (django-unfold) — ngjyra e njejta primare si app-i
+# Flutter (AppPalette.primary = #00B4D8, shih theme/app_pallete.dart).
+UNFOLD = {
+    'SITE_TITLE': 'Thesari Islam — Admin',
+    'SITE_HEADER': 'Thesari Islam',
+    'SITE_SYMBOL': 'auto_stories',
+    'SHOW_HISTORY': True,
+    'SHOW_VIEW_ON_SITE': False,
+    'COLORS': {
+        'primary': {
+            '50': '236 254 255',
+            '100': '207 250 254',
+            '200': '165 243 252',
+            '300': '103 232 249',
+            '400': '34 211 238',
+            '500': '6 182 212',
+            '600': '8 145 178',
+            '700': '14 116 144',
+            '800': '21 94 117',
+            '900': '22 78 99',
+            '950': '8 51 68',
+        },
+    },
+}
 
 LOGGING = {
     'version': 1,
